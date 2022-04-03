@@ -134,3 +134,6 @@ dmypy.json
 
 # Config file
 config.yml
+
+# Output files
+*.csv
