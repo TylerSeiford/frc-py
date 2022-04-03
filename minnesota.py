@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     # Write participation to file
     f = open('mn_participation.csv', 'w')
-    f.write('Year,Rookies,Participants,Last\n')
+    f.write('Year,Rookies,Participants,Retiring\n')
     for year in participation.keys():
         f.write(f"{year},{participation[year]['rookies']},{participation[year]['participants']},{participation[year]['last']}\n")
     f.close()
