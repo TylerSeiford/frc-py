@@ -4,29 +4,14 @@ from frc_py import FRC_PY
 
 
 
-def get_mn(api: FRC_PY) -> List[str]:
-    raw_data = api._load('temp-cache', 'mn.json')
-    if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=280): # TODO
-        teams = api.get_team_index()
-        mn = []
-        for team in teams:
-            city, state_prov, country = api.get_team_location(team)
-            if state_prov == 'Minnesota' or state_prov == 'MN':
-                mn.append(team)
-        api._save('temp-cache', 'mn.json', mn)
-        return mn
-    return raw_data[1]
-
-
-
 if __name__ == '__main__':
     api = FRC_PY()
-    mn = get_mn(api)
-    print(f"{len(mn)} teams in MN")
+    teams = api.get_team_index()
+    print(f"{len(teams)} teams")
 
-    # Get years of any participation from Minnesota
+    # Get years of any participation
     years = []
-    for team in mn:
+    for team in teams:
         team_years = api.get_team_participation(team)
         for year in team_years:
             if year not in years:
@@ -39,7 +24,7 @@ if __name__ == '__main__':
         participation[year] = {'rookies': 0, 'participants': 0, 'last': 0}
 
     # Fill participation structure
-    for team in mn:
+    for team in teams:
         team_years = api.get_team_participation(team)
         team_years.sort()
         if team_years == []:
@@ -60,7 +45,8 @@ if __name__ == '__main__':
             participation[team_years[-1]]['last'] += 1
 
     # Write participation to file
-    f = open('mn_participation.csv', 'w')
-    f.write('Year,Rookies,Participants,Last\n')
+    f = open('participation.csv', 'w')
+    f.write('Year,Rookies,Participants,Retiring\n')
     for year in participation.keys():
         f.write(f"{year},{participation[year]['rookies']},{participation[year]['participants']},{participation[year]['last']}\n")
+    f.close()
