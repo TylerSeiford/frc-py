@@ -131,3 +131,6 @@ dmypy.json
 
 # Caches
 *-cache/
+
+# Config file
+config.yml
