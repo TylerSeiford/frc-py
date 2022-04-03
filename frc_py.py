@@ -9,12 +9,6 @@ import statbotics
 
 
 class FRC_PY:
-    def __event_key_to_year(self, event: str) -> int:
-        return int(event[:4])
-
-    def __team_key_to_number(self, team: str) -> int:
-        return int(team[3:])
-
     def __init__(self):
         config = yaml.load(open('config.yml'), yaml.Loader)
         configuration = tbaapiv3client.Configuration(
@@ -27,7 +21,7 @@ class FRC_PY:
         self.__statbotics_cache = config['statbotics-cache']
         self.__cache_expiry = config['cache-expiry']
 
-    def __save(self, path: str, filename: str, data) -> None:
+    def _save(self, path: str, filename: str, data) -> None:
         data = {'datetime': datetime.utcnow().isoformat(), 'data': data}
         if not os.path.exists(path):
             os.makedirs(path)
@@ -35,7 +29,7 @@ class FRC_PY:
         json.dump(data, f)
         f.close()
 
-    def __load(self, path: str, filename: str) -> Tuple[datetime, Dict] | None:
+    def _load(self, path: str, filename: str) -> Tuple[datetime, Dict] | None:
         try:
             if not os.path.exists(path):
                 return None
@@ -48,8 +42,14 @@ class FRC_PY:
         except:
             return None
 
+    def _event_key_to_year(self, event: str) -> int:
+        return int(event[:4])
+
+    def _team_key_to_number(self, team: str) -> int:
+        return int(team[3:])
+
     def get_team_index(self) -> List:
-        raw_data = self.__load(os.path.join(self.__tba_cache, 'teams'), 'index.json')
+        raw_data = self._load(os.path.join(self.__tba_cache, 'teams'), 'index.json')
         if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=280): # TODO
             teams = []
             page = 0
@@ -60,16 +60,15 @@ class FRC_PY:
                 for team in teams_page:
                     teams.append(team)
                 page += 1
-            self.__save(os.path.join(self.__tba_cache, 'teams'), 'index.json', teams)
+            self._save(os.path.join(self.__tba_cache, 'teams'), 'index.json', teams)
             return teams
-
         return raw_data[1]
 
     def get_team_participation(self, team: str) -> List[int]:
-        raw_data = self.__load(os.path.join(self.__tba_cache, 'teams', team), 'participation.json')
+        raw_data = self._load(os.path.join(self.__tba_cache, 'teams', team), 'participation.json')
         if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=280): # TODO
             years = tbaapiv3client.TeamApi(self.__client).get_team_years_participated(team)
-            self.__save(os.path.join(self.__tba_cache, 'teams', team), 'participation.json', years)
+            self._save(os.path.join(self.__tba_cache, 'teams', team), 'participation.json', years)
             return years
         return raw_data[1]
 
@@ -79,28 +78,28 @@ class FRC_PY:
         nickname = simple.nickname
         name = simple.name
         data = {'location': location, 'nickname': nickname, 'name': name}
-        self.__save(os.path.join(self.__tba_cache, 'teams', team), 'simple.json', data)
+        self._save(os.path.join(self.__tba_cache, 'teams', team), 'simple.json', data)
         return data
 
     def get_team_location(self, team: str) -> Tuple[str, str, str]:
-        raw_data = self.__load(os.path.join(self.__tba_cache, 'teams', team), 'simple.json')
+        raw_data = self._load(os.path.join(self.__tba_cache, 'teams', team), 'simple.json')
         if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=280): # TODO
             return self.__team_simple(team)['location']
         return raw_data[1]['location']
 
     def get_team_nickname(self, team: str) -> str:
-        raw_data = self.__load(os.path.join(self.__tba_cache, 'teams', team), 'simple.json')
+        raw_data = self._load(os.path.join(self.__tba_cache, 'teams', team), 'simple.json')
         if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=280): # TODO
             return self.__team_simple(team)['nickname']
         return raw_data[1]['nickname']
 
     def get_team_name(self, team: str) -> str:
-        raw_data = self.__load(os.path.join(self.__tba_cache, 'teams', team), 'simple.json')
+        raw_data = self._load(os.path.join(self.__tba_cache, 'teams', team), 'simple.json')
         if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=280): # TODO
             return self.__team_simple(team)['name']
         return raw_data[1]['name']
 
-    def __save_simple_event(self, event: str, year: int, simple: tbaapiv3client.EventSimple) -> Dict:
+    def _save_simple_event(self, event: str, year: int, simple: tbaapiv3client.EventSimple) -> Dict:
         name = simple.name
         event_type = simple.event_type
         location = simple.city, simple.state_prov, simple.country
@@ -110,18 +109,18 @@ class FRC_PY:
         else:
             district = simple.district.key
         data = {'name': name, 'event_type': event_type, 'location': location, 'dates': dates, 'district': district}
-        self.__save(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json', data)
+        self._save(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json', data)
 
     def get_team_events_year(self, team: str, year: int) -> List[str] | None:
-        raw_data = self.__load(os.path.join(self.__tba_cache, 'teams', team, str(year)), 'events.json')
+        raw_data = self._load(os.path.join(self.__tba_cache, 'teams', team, str(year)), 'events.json')
         if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=280): # TODO
             events = []
             try:
                 api_events = tbaapiv3client.TeamApi(self.__client).get_team_events_by_year_simple(team, year)
                 for simple in api_events:
                     events.append(simple.key)
-                    self.__save_simple_event(simple.key, self.__event_key_to_year(simple.key), simple)
-                self.__save(os.path.join(self.__tba_cache, 'teams', team, str(year)), 'events.json', events)
+                    self._save_simple_event(simple.key, self.__event_key_to_year(simple.key), simple)
+                self._save(os.path.join(self.__tba_cache, 'teams', team, str(year)), 'events.json', events)
                 return events
             except ValueError as e:
                 return None
@@ -131,32 +130,32 @@ class FRC_PY:
 
     def __event_simple(self, event: str, year: int) -> Dict:
         simple = tbaapiv3client.EventApi(self.__client).get_event_simple(event)
-        return self.__save_simple_event(event, year, simple)
+        return self._save_simple_event(event, year, simple)
 
     def get_event_name(self, event: str) -> str:
         year = self.__event_key_to_year(event)
-        raw_data = self.__load(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json')
+        raw_data = self._load(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json')
         if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=280): # TODO
             return self.__event_simple(event, year)['name']
         return raw_data[1]['name']
 
     def get_event_type(self, event: str) -> int:
         year = self.__event_key_to_year(event)
-        raw_data = self.__load(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json')
+        raw_data = self._load(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json')
         if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=280): # TODO
             return self.__event_simple(event, year)['event_type']
         return raw_data[1]['event_type']
 
     def get_event_location(self, event: str) -> Tuple[str, str, str]:
         year = self.__event_key_to_year(event)
-        raw_data = self.__load(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json')
+        raw_data = self._load(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json')
         if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=280): # TODO
             return self.__event_simple(event, year)['location']
         return raw_data[1]['location']
 
     def get_event_dates(self, event: str) -> Tuple[date, date]:
         year = self.__event_key_to_year(event)
-        raw_data = self.__load(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json')
+        raw_data = self._load(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json')
         if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=280): # TODO
             start, end = self.__event_simple(event, year)['dates']
             start = date.fromisoformat(start)
@@ -169,13 +168,13 @@ class FRC_PY:
 
     def get_event_district(self, event: str) -> str:
         year = self.__event_key_to_year(event)
-        raw_data = self.__load(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json')
+        raw_data = self._load(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json')
         if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=280): 
             return self.__event_simple(event, year)['district']
         return raw_data[1]['district']
 
     def get_team_year_stats(self, team: str, year: int) -> Dict:
-        raw_data = self.__load(os.path.join(self.__statbotics_cache, 'teams', team, str(year)), 'stats.json')
+        raw_data = self._load(os.path.join(self.__statbotics_cache, 'teams', team, str(year)), 'stats.json')
         if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=7): # TODO
             try:
                 api_stats = statbotics.Statbotics().get_team_year(self.__team_key_to_number(team), year)
@@ -218,7 +217,7 @@ class FRC_PY:
                     'ils': ils,
                     'record': record
                 }
-                self.__save(os.path.join(self.__statbotics_cache, 'teams', team, str(year)), 'stats.json', stats)
+                self._save(os.path.join(self.__statbotics_cache, 'teams', team, str(year)), 'stats.json', stats)
                 return stats
             except ValueError as e:
                 return {}
