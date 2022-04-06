@@ -235,6 +235,6 @@ class FRC_PY:
                 self._save(os.path.join(self.__statbotics_cache, 'teams', team, str(year)), 'stats.json', stats)
                 return stats
             except BaseException as e:
-                print(f"Error getting team stats for {team} in {year}: {e}")
+                print(f"\n\tError getting team stats for {team} in {year}: {e}")
                 return {}
         return raw_data[1]
