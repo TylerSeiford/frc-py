@@ -20,6 +20,7 @@ class TeamLoader:
 
 api = FRC_PY()
 teams = api.get_team_index()
+teams.reverse()
 
 print(f"Preparing {len(teams)} teams...")
 ready_threads = []
