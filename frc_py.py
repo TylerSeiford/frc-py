@@ -173,11 +173,26 @@ class FRC_PY:
             return self.__event_simple(event, year)['district']
         return raw_data[1]['district']
 
+    def get_event_teams(self, event: str) -> List[str]:
+        year = self._event_key_to_year(event)
+        raw_data = self._load(os.path.join(self.__tba_cache, 'events', str(year), event), 'teams.json')
+        if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=280):
+            teams = []
+            try:
+                teams = tbaapiv3client.EventApi(self.__client).get_event_teams_keys(event)
+                self._save(os.path.join(self.__tba_cache, 'events', str(year), event), 'teams.json', teams)
+                return teams
+            except ValueError as e:
+                return []
+            except BaseException as e:
+                return []
+        return raw_data[1]
+
     def get_team_year_stats(self, team: str, year: int) -> Dict:
         raw_data = self._load(os.path.join(self.__statbotics_cache, 'teams', team, str(year)), 'stats.json')
         if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=7): # TODO
             try:
-                api_stats = statbotics.Statbotics().get_team_year(self.__team_key_to_number(team), year)
+                api_stats = statbotics.Statbotics().get_team_year(self._team_key_to_number(team), year)
                 elo = {
                     'start': api_stats['elo_start'],
                     'pre_champs': api_stats['elo_pre_champs'],
@@ -219,8 +234,7 @@ class FRC_PY:
                 }
                 self._save(os.path.join(self.__statbotics_cache, 'teams', team, str(year)), 'stats.json', stats)
                 return stats
-            except ValueError as e:
-                return {}
             except BaseException as e:
+                print(f"Error getting team stats for {team} in {year}: {e}")
                 return {}
         return raw_data[1]
