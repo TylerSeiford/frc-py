@@ -1,3 +1,4 @@
+import random
 from threading import Thread
 import time
 from frc_py import FRC_PY
@@ -13,6 +14,8 @@ class TeamLoader:
         team_nickname = self.__api.get_team_nickname(self.__team)
         years = self.__api.get_team_participation(self.__team)
         for year in years:
+            if year < 2007 or year == 2020 or year == 2021:
+                continue
             events = self.__api.get_team_events_year(self.__team, year)
             stats = self.__api.get_team_year_stats(self.__team, year)
 
@@ -20,7 +23,7 @@ class TeamLoader:
 
 api = FRC_PY()
 teams = api.get_team_index()
-teams.reverse()
+random.shuffle(teams)
 
 print(f"Preparing {len(teams)} teams...")
 ready_threads = []
