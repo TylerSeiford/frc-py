@@ -132,8 +132,8 @@ dmypy.json
 # Caches
 *-cache/
 
-# Config file
-config.yml
+# Token file
+token.json
 
 # Output files
 *.csv
