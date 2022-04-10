@@ -21,7 +21,7 @@ class TeamLoader:
 
 
 
-api = FRC_PY()
+api = FRC_PY(yaml.load(open('config.yml'), yaml.Loader))
 teams = api.get_team_index()
 random.shuffle(teams)
 

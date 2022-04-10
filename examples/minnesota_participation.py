@@ -20,7 +20,7 @@ def get_mn(api: FRC_PY) -> List[str]:
 
 
 if __name__ == '__main__':
-    api = FRC_PY()
+    api = FRC_PY(yaml.load(open('config.yml'), yaml.Loader))
     mn = get_mn(api)
     print(f"{len(mn)} teams in MN")
 

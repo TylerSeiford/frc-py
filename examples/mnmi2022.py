@@ -4,7 +4,7 @@ from frc_py import FRC_PY
 
 
 if __name__ == '__main__':
-    api = FRC_PY()
+    api = FRC_PY(yaml.load(open('config.yml'), yaml.Loader))
     teams = api.get_event_teams('2022mnmi')
     print(f"{len(teams)} teams")
 

@@ -3,14 +3,12 @@ import json
 import os
 from typing import Dict, List, Tuple
 import tbaapiv3client
-import yaml
 import statbotics
 
 
 
 class FRC_PY:
-    def __init__(self):
-        config = yaml.load(open('config.yml'), yaml.Loader)
+    def __init__(self, config):
         configuration = tbaapiv3client.Configuration(
             api_key = {
                 'X-TBA-Auth-Key': config['api-key']
