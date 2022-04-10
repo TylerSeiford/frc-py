@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
 from typing import List
+import yaml
 from frc_py import FRC_PY
 
 
 
 if __name__ == '__main__':
-    api = FRC_PY()
+    api = FRC_PY(yaml.load(open('config.yml'), yaml.Loader))
     teams = api.get_team_index()
     print(f"{len(teams)} teams")
 
