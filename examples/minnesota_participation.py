@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
+import json
 from typing import List
-import yaml
-from frc_py import FRC_PY
+from frc_py import FRCPY
 
 
 
-def get_mn(api: FRC_PY) -> List[str]:
+def get_mn(api: FRCPY) -> List[str]:
     raw_data = api._load('temp-cache', 'mn.json')
-    if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=280): # TODO
+    if raw_data is None or raw_data[0] < datetime.utcnow() - timedelta(days=280):
         teams = api.get_team_index()
         mn = []
         for team in teams:
@@ -21,7 +21,11 @@ def get_mn(api: FRC_PY) -> List[str]:
 
 
 if __name__ == '__main__':
-    api = FRC_PY(yaml.load(open('config.yml'), yaml.Loader))
+    f = open('token.json', 'r')
+    token = json.load(f)
+    f.close()
+
+    api = FRCPY(token)
     mn = get_mn(api)
     print(f"{len(mn)} teams in MN")
 
@@ -54,7 +58,7 @@ if __name__ == '__main__':
             participation[team_years[i]]['participants'] += 1
 
         # Add last season
-        if team_years[-1] == 2022: # TODO
+        if team_years[-1] == 2022:
             # Currently active teams are just participants in 2022, not their last year
             participation[team_years[-1]]['participants'] += 1
         else:

@@ -1,10 +1,14 @@
-import yaml
-from frc_py import FRC_PY
+import json
+from frc_py import FRCPY
 
 
 
 if __name__ == '__main__':
-    api = FRC_PY(yaml.load(open('config.yml'), yaml.Loader))
+    f = open('token.json', 'r')
+    token = json.load(f)
+    f.close()
+
+    api = FRCPY(token)
     teams = api.get_team_index()
     print(f"{len(teams)} teams")
 
@@ -37,7 +41,7 @@ if __name__ == '__main__':
             participation[team_years[i]]['participants'] += 1
 
         # Add last season
-        if team_years[-1] == 2022: # TODO
+        if team_years[-1] == 2022:
             # Currently active teams are just participants in 2022, not their last year
             participation[team_years[-1]]['participants'] += 1
         else:

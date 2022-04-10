@@ -1,10 +1,14 @@
-import yaml
-from frc_py import FRC_PY
+import json
+from frc_py import FRCPY
 
 
 
 if __name__ == '__main__':
-    api = FRC_PY(yaml.load(open('config.yml'), yaml.Loader))
+    f = open('token.json', 'r')
+    token = json.load(f)
+    f.close()
+
+    api = FRCPY(token)
     teams = api.get_event_teams('2022mnmi')
     print(f"{len(teams)} teams")
 

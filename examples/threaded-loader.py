@@ -1,13 +1,13 @@
+import json
 import random
 from threading import Thread
 import time
-import yaml
-from frc_py import FRC_PY
+from frc_py import FRCPY
 
 
 
 class TeamLoader:
-    def __init__(self, team: str, api: FRC_PY):
+    def __init__(self, team: str, api: FRCPY):
         self.__team = team
         self.__api = api
 
@@ -22,7 +22,11 @@ class TeamLoader:
 
 
 
-api = FRC_PY(yaml.load(open('config.yml'), yaml.Loader))
+f = open('token.json', 'r')
+token = json.load(f)
+f.close()
+
+api = FRCPY(token)
 teams = api.get_team_index()
 random.shuffle(teams)
 
