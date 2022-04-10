@@ -138,3 +138,6 @@ token.json
 # Output files
 *.csv
 *.xlsx
+
+# Test files
+*test*
