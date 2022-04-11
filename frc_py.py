@@ -2,8 +2,8 @@ from datetime import date, datetime, timedelta
 import json
 import os
 import shutil
-from typing import Dict, List, Tuple
-import tbaapiv3client
+from typing import Any, Dict, List, Tuple
+import tbapy
 import statbotics
 
 
@@ -16,12 +16,7 @@ class FRCPY:
                 'team-index': 280, 'team-participation': 280, 'team-simple': 280, 'team-events-year': 280,
                 'event-simple': 280, 'event-teams': 280, 'team-year-stats': 7
             }) -> None:
-        configuration = tbaapiv3client.Configuration(
-            api_key = {
-                'X-TBA-Auth-Key': token
-            }
-        )
-        self.__client = tbaapiv3client.ApiClient(configuration)
+        self.__client = tbapy.TBA(token)
         self.__tba_cache = tba_cache
         self.__statbotics_cache = statbotics_cache
         self.__cache_expiry = cache_expiry
@@ -70,7 +65,7 @@ class FRCPY:
             teams = []
             page = 0
             while True:
-                teams_page = tbaapiv3client.TeamApi(self.__client).get_teams_keys(page)
+                teams_page = self.__client.teams(page=page, keys=True)
                 if len(teams_page) == 0:
                     break
                 for team in teams_page:
@@ -83,13 +78,14 @@ class FRCPY:
     def get_team_participation(self, team: str) -> List[int]:
         raw_data = self._load(os.path.join(self.__tba_cache, 'teams', team), 'participation.json')
         if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['team-participation']):
-            years = tbaapiv3client.TeamApi(self.__client).get_team_years_participated(team)
+            years = self.__client.team_years(team)
             self._save(os.path.join(self.__tba_cache, 'teams', team), 'participation.json', years)
             return years
         return raw_data[1]
 
-    def __team_simple(self, team: str) -> tbaapiv3client.TeamSimple:
-        simple = tbaapiv3client.TeamApi(self.__client).get_team_simple(team)
+    def __team_simple(self, team: str) -> Dict[str, Any]:
+        simple = self.__client.team(team, simple=True)
+        print(simple)
         location = simple.city, simple.state_prov, simple.country
         nickname = simple.nickname
         name = simple.name
@@ -119,14 +115,14 @@ class FRCPY:
         raw_data = self._load(os.path.join(self.__tba_cache, 'teams', team, str(year)), 'events.json')
         if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['team-events-year']):
             try:
-                events = tbaapiv3client.TeamApi(self.__client).get_team_events_by_year_keys(team, year)
+                events = self.__client.team_events(team, year=year, keys=True)
                 self._save(os.path.join(self.__tba_cache, 'teams', team, str(year)), 'events.json', events)
                 return events
             except BaseException as e:
                 return e
         return raw_data[1]
 
-    def __save_simple_event(self, event: str, year: int, simple: tbaapiv3client.EventSimple) -> Dict:
+    def __save_simple_event(self, event: str, year: int, simple: Any) -> Dict: # TODO type
         name = simple.name
         event_type = simple.event_type
         location = simple.city, simple.state_prov, simple.country
