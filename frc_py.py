@@ -85,7 +85,6 @@ class FRCPY:
 
     def __team_simple(self, team: str) -> Dict[str, Any]:
         simple = self.__client.team(team, simple=True)
-        print(simple)
         location = simple.city, simple.state_prov, simple.country
         nickname = simple.nickname
         name = simple.name
@@ -122,21 +121,21 @@ class FRCPY:
                 return e
         return raw_data[1]
 
-    def __save_simple_event(self, event: str, year: int, simple: Any) -> Dict: # TODO type
+    def __save_simple_event(self, event: str, year: int, simple: Any) -> Dict:
         name = simple.name
         event_type = simple.event_type
         location = simple.city, simple.state_prov, simple.country
-        dates = simple.start_date.isoformat(), simple.end_date.isoformat()
+        dates = simple.start_date, simple.end_date
         if simple.district is None:
             district = None
         else:
-            district = simple.district.key
+            district = simple.district['key']
         data = {'name': name, 'event_type': event_type, 'location': location, 'dates': dates, 'district': district}
         self._save(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json', data)
         return data
 
     def __event_simple(self, event: str, year: int) -> Dict:
-        simple = tbaapiv3client.EventApi(self.__client).get_event_simple(event)
+        simple = self.__client.event(event, simple=True)
         return self.__save_simple_event(event, year, simple)
 
     def get_event_name(self, event: str) -> str:
@@ -186,7 +185,7 @@ class FRCPY:
         if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['event-teams']):
             teams = []
             try:
-                teams = tbaapiv3client.EventApi(self.__client).get_event_teams_keys(event)
+                teams = self.__client.event_teams(event, keys=True)
                 self._save(os.path.join(self.__tba_cache, 'events', str(year), event), 'teams.json', teams)
                 return teams
             except BaseException as e:
