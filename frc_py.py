@@ -1,4 +1,3 @@
-from codecs import ignore_errors
 from datetime import date, datetime, timedelta
 import json
 import os
