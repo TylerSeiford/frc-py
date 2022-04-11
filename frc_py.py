@@ -118,12 +118,8 @@ class FRCPY:
     def get_team_events_year(self, team: str, year: int) -> List[str] | BaseException:
         raw_data = self._load(os.path.join(self.__tba_cache, 'teams', team, str(year)), 'events.json')
         if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['team-events-year']):
-            events = []
             try:
-                api_events = tbaapiv3client.TeamApi(self.__client).get_team_events_by_year_simple(team, year)
-                for simple in api_events:
-                    events.append(simple.key)
-                    self.__save_simple_event(simple.key, self._event_key_to_year(simple.key), simple)
+                events = tbaapiv3client.TeamApi(self.__client).get_team_events_by_year_keys(team, year)
                 self._save(os.path.join(self.__tba_cache, 'teams', team, str(year)), 'events.json', events)
                 return events
             except BaseException as e:
