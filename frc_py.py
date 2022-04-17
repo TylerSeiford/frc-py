@@ -2,6 +2,7 @@ from datetime import date, datetime, timedelta
 import json
 import os
 import shutil
+from threading import Semaphore
 from typing import Any, Dict, List, Tuple
 import tbapy
 import statbotics
@@ -20,11 +21,14 @@ class FRCPY:
         self.__tba_cache = tba_cache
         self.__statbotics_cache = statbotics_cache
         self.__cache_expiry = cache_expiry
+        self.__dir_semaphore = Semaphore()
 
     def _save(self, path: str, filename: str, data) -> None:
-        data = {'datetime': datetime.utcnow().isoformat(), 'data': data}
+        data = { 'datetime': datetime.utcnow().isoformat(), 'data': data }
+        self.__dir_semaphore.acquire()
         if not os.path.exists(path):
             os.makedirs(path)
+        self.__dir_semaphore.release()
         f = open(os.path.join(path, filename), 'w')
         json.dump(data, f)
         f.close()
@@ -49,15 +53,19 @@ class FRCPY:
         return int(team[3:])
 
     def _purge_cache_team(self, team: str) -> None:
+        self.__dir_semaphore.acquire()
         if os.path.exists(os.path.join(self.__tba_cache, 'teams', team)):
             shutil.rmtree(os.path.join(self.__tba_cache, 'teams', team), ignore_errors=True)
         if os.path.exists(os.path.join(self.__statbotics_cache, 'teams', team)):
             shutil.rmtree(os.path.join(self.__statbotics_cache, 'teams', team), ignore_errors=True)
+        self.__dir_semaphore.release()
 
     def _purge_cache_event(self, event: str) -> None:
         year = self._event_key_to_year(event)
+        self.__dir_semaphore.acquire()
         if os.path.exists(os.path.join(self.__tba_cache, 'events', str(year), event)):
             shutil.rmtree(os.path.join(self.__tba_cache, 'events', str(year), event), ignore_errors=True)
+        self.__dir_semaphore.release()
 
     def get_team_index(self) -> List:
         raw_data = self._load(os.path.join(self.__tba_cache, 'teams'), 'index.json')
@@ -155,7 +163,7 @@ class FRCPY:
     def get_event_location(self, event: str) -> Tuple[str, str, str]:
         year = self._event_key_to_year(event)
         raw_data = self._load(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json')
-        if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['event_simple']):
+        if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['event-simple']):
             return self.__event_simple(event, year)['location']
         return raw_data[1]['location']
 
