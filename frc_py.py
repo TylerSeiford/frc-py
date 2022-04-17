@@ -2,8 +2,9 @@ from datetime import date, datetime, timedelta
 import json
 import os
 import shutil
-from typing import Dict, List, Tuple
-import tbaapiv3client
+from threading import Semaphore
+from typing import Any, Dict, List, Tuple
+import tbapy
 import statbotics
 
 
@@ -16,20 +17,18 @@ class FRCPY:
                 'team-index': 280, 'team-participation': 280, 'team-simple': 280, 'team-events-year': 280,
                 'event-simple': 280, 'event-teams': 280, 'team-year-stats': 7
             }) -> None:
-        configuration = tbaapiv3client.Configuration(
-            api_key = {
-                'X-TBA-Auth-Key': token
-            }
-        )
-        self.__client = tbaapiv3client.ApiClient(configuration)
+        self.__client = tbapy.TBA(token)
         self.__tba_cache = tba_cache
         self.__statbotics_cache = statbotics_cache
         self.__cache_expiry = cache_expiry
+        self.__dir_semaphore = Semaphore()
 
     def _save(self, path: str, filename: str, data) -> None:
-        data = {'datetime': datetime.utcnow().isoformat(), 'data': data}
+        data = { 'datetime': datetime.utcnow().isoformat(), 'data': data }
+        self.__dir_semaphore.acquire()
         if not os.path.exists(path):
             os.makedirs(path)
+        self.__dir_semaphore.release()
         f = open(os.path.join(path, filename), 'w')
         json.dump(data, f)
         f.close()
@@ -54,15 +53,19 @@ class FRCPY:
         return int(team[3:])
 
     def _purge_cache_team(self, team: str) -> None:
+        self.__dir_semaphore.acquire()
         if os.path.exists(os.path.join(self.__tba_cache, 'teams', team)):
             shutil.rmtree(os.path.join(self.__tba_cache, 'teams', team), ignore_errors=True)
         if os.path.exists(os.path.join(self.__statbotics_cache, 'teams', team)):
             shutil.rmtree(os.path.join(self.__statbotics_cache, 'teams', team), ignore_errors=True)
+        self.__dir_semaphore.release()
 
     def _purge_cache_event(self, event: str) -> None:
         year = self._event_key_to_year(event)
+        self.__dir_semaphore.acquire()
         if os.path.exists(os.path.join(self.__tba_cache, 'events', str(year), event)):
             shutil.rmtree(os.path.join(self.__tba_cache, 'events', str(year), event), ignore_errors=True)
+        self.__dir_semaphore.release()
 
     def get_team_index(self) -> List:
         raw_data = self._load(os.path.join(self.__tba_cache, 'teams'), 'index.json')
@@ -70,7 +73,7 @@ class FRCPY:
             teams = []
             page = 0
             while True:
-                teams_page = tbaapiv3client.TeamApi(self.__client).get_teams_keys(page)
+                teams_page = self.__client.teams(page=page, keys=True)
                 if len(teams_page) == 0:
                     break
                 for team in teams_page:
@@ -83,13 +86,13 @@ class FRCPY:
     def get_team_participation(self, team: str) -> List[int]:
         raw_data = self._load(os.path.join(self.__tba_cache, 'teams', team), 'participation.json')
         if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['team-participation']):
-            years = tbaapiv3client.TeamApi(self.__client).get_team_years_participated(team)
+            years = self.__client.team_years(team)
             self._save(os.path.join(self.__tba_cache, 'teams', team), 'participation.json', years)
             return years
         return raw_data[1]
 
-    def __team_simple(self, team: str) -> tbaapiv3client.TeamSimple:
-        simple = tbaapiv3client.TeamApi(self.__client).get_team_simple(team)
+    def __team_simple(self, team: str) -> Dict[str, Any]:
+        simple = self.__client.team(team, simple=True)
         location = simple.city, simple.state_prov, simple.country
         nickname = simple.nickname
         name = simple.name
@@ -119,28 +122,28 @@ class FRCPY:
         raw_data = self._load(os.path.join(self.__tba_cache, 'teams', team, str(year)), 'events.json')
         if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['team-events-year']):
             try:
-                events = tbaapiv3client.TeamApi(self.__client).get_team_events_by_year_keys(team, year)
+                events = self.__client.team_events(team, year=year, keys=True)
                 self._save(os.path.join(self.__tba_cache, 'teams', team, str(year)), 'events.json', events)
                 return events
             except BaseException as e:
                 return e
         return raw_data[1]
 
-    def __save_simple_event(self, event: str, year: int, simple: tbaapiv3client.EventSimple) -> Dict:
+    def __save_simple_event(self, event: str, year: int, simple: Any) -> Dict:
         name = simple.name
         event_type = simple.event_type
         location = simple.city, simple.state_prov, simple.country
-        dates = simple.start_date.isoformat(), simple.end_date.isoformat()
+        dates = simple.start_date, simple.end_date
         if simple.district is None:
             district = None
         else:
-            district = simple.district.key
+            district = simple.district['key']
         data = {'name': name, 'event_type': event_type, 'location': location, 'dates': dates, 'district': district}
         self._save(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json', data)
         return data
 
     def __event_simple(self, event: str, year: int) -> Dict:
-        simple = tbaapiv3client.EventApi(self.__client).get_event_simple(event)
+        simple = self.__client.event(event, simple=True)
         return self.__save_simple_event(event, year, simple)
 
     def get_event_name(self, event: str) -> str:
@@ -160,7 +163,7 @@ class FRCPY:
     def get_event_location(self, event: str) -> Tuple[str, str, str]:
         year = self._event_key_to_year(event)
         raw_data = self._load(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json')
-        if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['event_simple']):
+        if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['event-simple']):
             return self.__event_simple(event, year)['location']
         return raw_data[1]['location']
 
@@ -190,7 +193,7 @@ class FRCPY:
         if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['event-teams']):
             teams = []
             try:
-                teams = tbaapiv3client.EventApi(self.__client).get_event_teams_keys(event)
+                teams = self.__client.event_teams(event, keys=True)
                 self._save(os.path.join(self.__tba_cache, 'events', str(year), event), 'teams.json', teams)
                 return teams
             except BaseException as e:
