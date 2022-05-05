@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 from threading import Semaphore
-from typing import Any, Dict, List, Tuple
+from typing import Any
 import tbapy
 import statbotics
 
@@ -13,11 +13,12 @@ class FRCPY:
     def __init__(self, token: str,
             tba_cache: str = 'tba-cache',
             statbotics_cache: str = 'statbotics-cache',
-            cache_expiry: Dict[str, int] = {
+            cache_expiry: dict[str, int] = {
                 'team-index': 280, 'team-participation': 280, 'team-simple': 280, 'team-events-year': 280,
                 'event-simple': 280, 'event-teams': 280, 'team-year-stats': 7
             }) -> None:
-        self.__client = tbapy.TBA(token)
+        self.__tba_client = tbapy.TBA(token)
+        self.__statbotics_client = statbotics.Statbotics()
         self.__tba_cache = tba_cache
         self.__statbotics_cache = statbotics_cache
         self.__cache_expiry = cache_expiry
@@ -33,7 +34,7 @@ class FRCPY:
         json.dump(data, f)
         f.close()
 
-    def _load(self, path: str, filename: str) -> Tuple[datetime, Dict] | BaseException:
+    def _load(self, path: str, filename: str) -> tuple[datetime, dict] | BaseException:
         try:
             if not os.path.exists(path):
                 return None
@@ -45,6 +46,12 @@ class FRCPY:
             return date_time, data
         except BaseException as e:
             return e
+
+    def _tba_client(self) -> tbapy.TBA:
+        return self.__tba_client
+
+    def _stat_client(self) -> statbotics.Statbotics:
+        return self.__statbotics_client
 
     def _event_key_to_year(self, event: str) -> int:
         return int(event[:4])
@@ -67,13 +74,13 @@ class FRCPY:
             shutil.rmtree(os.path.join(self.__tba_cache, 'events', str(year), event), ignore_errors=True)
         self.__dir_semaphore.release()
 
-    def get_team_index(self) -> List:
+    def get_team_index(self) -> list:
         raw_data = self._load(os.path.join(self.__tba_cache, 'teams'), 'index.json')
         if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['team-index']):
             teams = []
             page = 0
             while True:
-                teams_page = self.__client.teams(page=page, keys=True)
+                teams_page = self.__tba_client.teams(page=page, keys=True)
                 if len(teams_page) == 0:
                     break
                 for team in teams_page:
@@ -83,16 +90,16 @@ class FRCPY:
             return teams
         return raw_data[1]
 
-    def get_team_participation(self, team: str) -> List[int]:
+    def get_team_participation(self, team: str) -> list[int]:
         raw_data = self._load(os.path.join(self.__tba_cache, 'teams', team), 'participation.json')
         if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['team-participation']):
-            years = self.__client.team_years(team)
+            years = self.__tba_client.team_years(team)
             self._save(os.path.join(self.__tba_cache, 'teams', team), 'participation.json', years)
             return years
         return raw_data[1]
 
-    def __team_simple(self, team: str) -> Dict[str, Any]:
-        simple = self.__client.team(team, simple=True)
+    def __team_simple(self, team: str) -> dict[str, Any]:
+        simple = self.__tba_client.team(team, simple=True)
         location = simple.city, simple.state_prov, simple.country
         nickname = simple.nickname
         name = simple.name
@@ -100,7 +107,7 @@ class FRCPY:
         self._save(os.path.join(self.__tba_cache, 'teams', team), 'simple.json', data)
         return data
 
-    def get_team_location(self, team: str) -> Tuple[str, str, str]:
+    def get_team_location(self, team: str) -> tuple[str, str, str]:
         raw_data = self._load(os.path.join(self.__tba_cache, 'teams', team), 'simple.json')
         if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['team-simple']):
             return self.__team_simple(team)['location']
@@ -118,18 +125,18 @@ class FRCPY:
             return self.__team_simple(team)['name']
         return raw_data[1]['name']
 
-    def get_team_events_year(self, team: str, year: int) -> List[str] | BaseException:
+    def get_team_events_year(self, team: str, year: int) -> list[str] | BaseException:
         raw_data = self._load(os.path.join(self.__tba_cache, 'teams', team, str(year)), 'events.json')
         if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['team-events-year']):
             try:
-                events = self.__client.team_events(team, year=year, keys=True)
+                events = self.__tba_client.team_events(team, year=year, keys=True)
                 self._save(os.path.join(self.__tba_cache, 'teams', team, str(year)), 'events.json', events)
                 return events
             except BaseException as e:
                 return e
         return raw_data[1]
 
-    def __save_simple_event(self, event: str, year: int, simple: Any) -> Dict:
+    def __save_simple_event(self, event: str, year: int, simple: Any) -> dict:
         name = simple.name
         event_type = simple.event_type
         location = simple.city, simple.state_prov, simple.country
@@ -142,8 +149,8 @@ class FRCPY:
         self._save(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json', data)
         return data
 
-    def __event_simple(self, event: str, year: int) -> Dict:
-        simple = self.__client.event(event, simple=True)
+    def __event_simple(self, event: str, year: int) -> dict:
+        simple = self.__tba_client.event(event, simple=True)
         return self.__save_simple_event(event, year, simple)
 
     def get_event_name(self, event: str) -> str:
@@ -160,14 +167,14 @@ class FRCPY:
             return self.__event_simple(event, year)['event_type']
         return raw_data[1]['event_type']
 
-    def get_event_location(self, event: str) -> Tuple[str, str, str]:
+    def get_event_location(self, event: str) -> tuple[str, str, str]:
         year = self._event_key_to_year(event)
         raw_data = self._load(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json')
         if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['event-simple']):
             return self.__event_simple(event, year)['location']
         return raw_data[1]['location']
 
-    def get_event_dates(self, event: str) -> Tuple[date, date]:
+    def get_event_dates(self, event: str) -> tuple[date, date]:
         year = self._event_key_to_year(event)
         raw_data = self._load(os.path.join(self.__tba_cache, 'events', str(year), event), 'simple.json')
         if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['event-simple']):
@@ -187,24 +194,24 @@ class FRCPY:
             return self.__event_simple(event, year)['district']
         return raw_data[1]['district']
 
-    def get_event_teams(self, event: str) -> List[str] | BaseException:
+    def get_event_teams(self, event: str) -> list[str] | BaseException:
         year = self._event_key_to_year(event)
         raw_data = self._load(os.path.join(self.__tba_cache, 'events', str(year), event), 'teams.json')
         if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['event-teams']):
             teams = []
             try:
-                teams = self.__client.event_teams(event, keys=True)
+                teams = self.__tba_client.event_teams(event, keys=True)
                 self._save(os.path.join(self.__tba_cache, 'events', str(year), event), 'teams.json', teams)
                 return teams
             except BaseException as e:
                 return e
         return raw_data[1]
 
-    def get_team_year_stats(self, team: str, year: int) -> Dict | BaseException:
+    def get_team_year_stats(self, team: str, year: int) -> dict | BaseException:
         raw_data = self._load(os.path.join(self.__statbotics_cache, 'teams', team, str(year)), 'stats.json')
         if raw_data is None or isinstance(raw_data, BaseException) or raw_data[0] < datetime.utcnow() - timedelta(days=self.__cache_expiry['team-year-stats']):
             try:
-                api_stats = statbotics.Statbotics().get_team_year(self._team_key_to_number(team), year)
+                api_stats = self.__statbotics_client.get_team_year(self._team_key_to_number(team), year)
                 elo = {
                     'start': api_stats['elo_start'],
                     'pre_champs': api_stats['elo_pre_champs'],
