@@ -46,7 +46,8 @@
 		"donjayamanne.python-environment-manager",
 		"donjayamanne.python-extension-pack",
 		"KevinRose.vsc-python-indent",
-		"ms-azuretools.vscode-docker"
+		"ms-azuretools.vscode-docker",
+		"eamodio.gitlens"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
