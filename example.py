@@ -32,5 +32,16 @@ if __name__ == '__main__':
     print(f"Teams: {len(api.get_event_teams('2022mndu'))}")
     print(f"Matches: {len(api.get_event_matches('2022mndu'))}")
 
+    print('***** Team @ Event *****')
+    print(f"Matches: {len(api.get_team_event_matches('frc2501', '2022mndu'))}")
+
     print('***** Matches *****')
-    
+    print(f"Level: {api.get_match_level('2022mndu_qm48')}")
+    print(f"Set Number: {api.get_match_set_number('2022mndu_qm48')}")
+    print(f"Match Number: {api.get_match_number('2022mndu_qm48')}")
+    print(f"Winner: {api.get_match_winner('2022mndu_qm48')}")
+    print(f"Red Score: {api.get_match_red_score('2022mndu_qm48')}")
+    print(f"Blue Score: {api.get_match_blue_score('2022mndu_qm48')}")
+    print(f"Red Alliance: {api.get_match_red_teams('2022mndu_qm48')}")
+    print(f"Blue Alliance: {api.get_match_blue_teams('2022mndu_qm48')}")
+    print(f"Time: {api.get_match_time('2022mndu_qm48')}")

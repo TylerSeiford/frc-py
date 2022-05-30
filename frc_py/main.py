@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 import os
 import tbapy
 import statbotics
@@ -6,19 +6,19 @@ from .cache import Cache
 
 class FRC_PY:
     @staticmethod
-    def _team_key_to_number(team: str) -> int:
+    def team_key_to_number(team: str) -> int:
         return int(team[3:])
 
     @staticmethod
-    def _event_key_to_year(event: str) -> int:
+    def event_key_to_year(event: str) -> int:
         return int(event[:4])
 
     @staticmethod
-    def _match_key_to_year(match: str) -> int:
+    def match_key_to_year(match: str) -> int:
         return int(match[:4])
 
     @staticmethod
-    def _match_key_to_event(match: str) -> str:
+    def match_key_to_event(match: str) -> str:
         return match.split('_')[0]
 
     @staticmethod
@@ -84,6 +84,31 @@ class FRC_PY:
             'Festival of Champions',
             'Remote'
         ]
+
+    @staticmethod
+    def __validate_winner(winner: str, red_score: int, blue_score: int) -> str:
+        if winner == 'red':
+            if red_score < blue_score:
+                raise ValueError('Red alliance won but red score is less than blue score')
+            elif red_score == blue_score:
+                raise ValueError('Red alliance won but red score is equal to blue score')
+            else:
+                pass
+        elif winner == 'blue':
+            if blue_score < red_score:
+                raise ValueError('Blue alliance won but blue score is less than red score')
+            elif blue_score == red_score:
+                raise ValueError('Blue alliance won but blue score is equal to red score')
+            else:
+                pass
+        else:
+            if red_score > blue_score:
+                pass
+            elif red_score < blue_score:
+                pass
+            else:
+                winner = 'tie' # TBA does not give us a tie
+        return winner
 
 
     def __init__(self, tba_token: str):
@@ -204,7 +229,7 @@ class FRC_PY:
         return events
 
     def __event_simple(self, event: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
-        year = FRC_PY._event_key_to_year(event)
+        year = FRC_PY.event_key_to_year(event)
         if cached and self.__cache.is_cached(os.path.join('events', str(year), event), 'simple_tba'):
             simple = self.__cache.get(os.path.join('events', str(year), event), 'simple_tba', cache_expiry)
             if simple is not None:
@@ -238,7 +263,7 @@ class FRC_PY:
         return self.__event_simple(event, cached, cache_expiry)['district']
 
     def get_event_teams(self, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
-        year = FRC_PY._event_key_to_year(event)
+        year = FRC_PY.event_key_to_year(event)
         if cached and self.__cache.is_cached(os.path.join('events', str(year), event), 'teams_tba'):
             teams = self.__cache.get(os.path.join('events', str(year), event), 'teams_tba', cache_expiry)
             if teams is not None:
@@ -249,7 +274,7 @@ class FRC_PY:
         return teams
 
     def get_event_matches(self, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
-        year = FRC_PY._event_key_to_year(event)
+        year = FRC_PY.event_key_to_year(event)
         if cached and self.__cache.is_cached(os.path.join('events', str(year), event), 'matches_tba'):
             matches = self.__cache.get(os.path.join('events', str(year), event), 'matches_tba', cache_expiry)
             if matches is not None:
@@ -258,3 +283,77 @@ class FRC_PY:
         if cached:
             self.__cache.save(os.path.join('events', str(year), event), 'matches_tba', matches)
         return matches
+
+    def get_team_event_matches(self, team: str, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
+        year = FRC_PY.event_key_to_year(event)
+        if cached and self.__cache.is_cached(os.path.join('teams', team, str(year), event), 'matches_tba'):
+            matches = self.__cache.get(os.path.join('teams', team, str(year), event), 'matches_tba', cache_expiry)
+            if matches is not None:
+                return matches
+        matches = self.__tba_client.team_matches(team, event, keys=True)
+        if cached:
+            self.__cache.save(os.path.join('teams', team, str(year), event), 'matches_tba', matches)
+        return matches
+
+    def __match_simple(self, match: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
+        year = FRC_PY.match_key_to_year(match)
+        event = FRC_PY.match_key_to_event(match)
+        if cached and self.__cache.is_cached(os.path.join('matches', str(year), event, match), 'simple_tba'):
+            simple = self.__cache.get(os.path.join('matches', str(year), event, match), 'simple_tba', cache_expiry)
+            if simple is not None:
+                return simple
+        simple = self.__tba_client.match(match, simple=True)
+        red_score = simple.alliances['red']['score']
+        blue_score = simple.alliances['blue']['score']
+        winner = FRC_PY.__validate_winner(simple.winning_alliance, red_score, blue_score)
+        data = {
+            'level': simple.comp_level,
+            'set_number': simple.set_number,
+            'match_number': simple.match_number,
+            'red_score': red_score,
+            'blue_score': blue_score,
+            'red_teams': {
+                'team_keys': simple.alliances['red']['team_keys'],
+                'dq': simple.alliances['red']['dq_team_keys'],
+                'surrogate': simple.alliances['red']['surrogate_team_keys']
+            },
+            'blue_teams': {
+                'team_keys': simple.alliances['blue']['team_keys'],
+                'dq': simple.alliances['blue']['dq_team_keys'],
+                'surrogate': simple.alliances['blue']['surrogate_team_keys']
+            },
+            'winner': winner,
+            'schedule_time': simple.time,
+            'predicted_time': simple.predicted_time,
+            'actual_time': simple.actual_time
+        }
+        if cached:
+            self.__cache.save(os.path.join('matches', str(year), event, match), 'simple_tba', data)
+        return data
+
+    def get_match_level(self, match: str, cached: bool = True, cache_expiry: int = 90) -> str:
+        return self.__match_simple(match, cached, cache_expiry)['level']
+
+    def get_match_set_number(self, match: str, cached: bool = True, cache_expiry: int = 90) -> int:
+        return self.__match_simple(match, cached, cache_expiry)['set_number']
+
+    def get_match_number(self, match: str, cached: bool = True, cache_expiry: int = 90) -> int:
+        return self.__match_simple(match, cached, cache_expiry)['match_number']
+
+    def get_match_winner(self, match: str, cached: bool = True, cache_expiry: int = 90) -> str:
+        return self.__match_simple(match, cached, cache_expiry)['winner']
+
+    def get_match_red_score(self, match: str, cached: bool = True, cache_expiry: int = 90) -> int:
+        return self.__match_simple(match, cached, cache_expiry)['red_score']
+
+    def get_match_blue_score(self, match: str, cached: bool = True, cache_expiry: int = 90) -> int:
+        return self.__match_simple(match, cached, cache_expiry)['blue_score']
+
+    def get_match_red_teams(self, match: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
+        return self.__match_simple(match, cached, cache_expiry)['red_teams']['team_keys']
+
+    def get_match_blue_teams(self, match: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
+        return self.__match_simple(match, cached, cache_expiry)['blue_teams']['team_keys']
+
+    def get_match_time(self, match: str, cached: bool = True, cache_expiry: int = 90) -> datetime:
+        return datetime.fromtimestamp(self.__match_simple(match, cached, cache_expiry)['actual_time'])
