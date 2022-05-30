@@ -36,8 +36,8 @@ class FRC_PY:
         return (1992, status['max_season'])
 
     def get_team_index(self, cached: bool = True, cache_expiry: int = 90) -> list:
-        if cached and self.__cache.is_cached('teams', 'index'):
-            teams = self.__cache.get('teams', 'index', cache_expiry)
+        if cached and self.__cache.is_cached('teams', 'index_tba'):
+            teams = self.__cache.get('teams', 'index_tba', cache_expiry)
             if teams is not None:
                 return teams
         teams = []
@@ -49,14 +49,67 @@ class FRC_PY:
             for team in teams_page:
                 teams.append(team)
             page += 1
-        self.__cache.save('teams', 'index', teams)
+        self.__cache.save('teams', 'index_tba', teams)
         return teams
 
     def get_team_participation(self, team: str, cached: bool = True, cache_expiry: int = 90) -> list[int]:
-        if cached and self.__cache.is_cached(os.path.join('teams', team), 'participation'):
-            participation = self.__cache.get(os.path.join('teams', team), 'participation', cache_expiry)
+        if cached and self.__cache.is_cached(os.path.join('teams', team), 'participation_tba'):
+            participation = self.__cache.get(os.path.join('teams', team), 'participation_tba', cache_expiry)
             if participation is not None:
                 return participation
         participation = self.__tba_client.team_years(team)
-        self.__cache.save(os.path.join('teams', team), 'participation', participation)
+        self.__cache.save(os.path.join('teams', team), 'participation_tba', participation)
         return participation
+
+    def __team_simple(self, team: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
+        if cached and self.__cache.is_cached(os.path.join('teams', team), 'simple_tba'):
+            simple = self.__cache.get(os.path.join('teams', team), 'simple_tba', cache_expiry)
+            if simple is not None:
+                return simple
+        simple = self.__tba_client.team(team, simple=True)
+        data = {
+            'location': (simple.city, simple.state_prov, simple.country),
+            'nickname': simple.nickname,
+            'name': simple.name
+        }
+        self.__cache.save(os.path.join('teams', team), 'simple_tba', data)
+        return data
+
+    def get_team_location(self, team: str, cached: bool = True, cache_expiry: int = 90) -> tuple[str, str, str]:
+        return self.__team_simple(team, cached, cache_expiry)['location']
+
+    def get_team_nickname(self, team: str, cached: bool = True, cache_expiry: int = 90) -> str:
+        return self.__team_simple(team, cached, cache_expiry)['nickname']
+
+    def get_team_name(self, team: str, cached: bool = True, cache_expiry: int = 90) -> str:
+        return self.__team_simple(team, cached, cache_expiry)['name']
+
+    def __team(self, team: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
+        if cached and self.__cache.is_cached(os.path.join('teams', team), 'full_tba'):
+            data = self.__cache.get(os.path.join('teams', team), 'full_tba', cache_expiry)
+            if data is not None:
+                return data
+        api_data = self.__tba_client.team(team)
+        print(api_data)
+        data = {
+            'school_name': api_data.school_name,
+            'website': api_data.website,
+            'rookie_year': api_data.rookie_year,
+            'motto': api_data.motto,
+            # 'home_championships': api_data.home_championship
+            # Documented in the TBA API docs, but not implemented in tbapy?
+        }
+        self.__cache.save(os.path.join('teams', team), 'full_tba', data)
+        return data
+
+    def get_team_school(self, team: str, cached: bool = True, cache_expiry: int = 90) -> str:
+        return self.__team(team, cached, cache_expiry)['school_name']
+
+    def get_team_website(self, team: str, cached: bool = True, cache_expiry: int = 90) -> str:
+        return self.__team(team, cached, cache_expiry)['website']
+
+    def get_team_rookie_year(self, team: str, cached: bool = True, cache_expiry: int = 90) -> int:
+        return self.__team(team, cached, cache_expiry)['rookie_year']
+
+    def get_team_motto(self, team: str, cached: bool = True, cache_expiry: int = 90) -> str:
+        return self.__team(team, cached, cache_expiry)['motto']
