@@ -112,3 +112,12 @@ class FRC_PY:
 
     def get_team_motto(self, team: str, cached: bool = True, cache_expiry: int = 90) -> str:
         return self.__team(team, cached, cache_expiry)['motto']
+
+    def get_team_events_year(self, team: str, year: int, cached: bool = True, cache_expiry: int = 90) -> list[str]:
+        if cached and self.__cache.is_cached(os.path.join('teams', team, str(year)), 'events_tba'):
+            events = self.__cache.get(os.path.join('teams', team, str(year)), 'events_tba', cache_expiry)
+            if events is not None:
+                return events
+        events = self.__tba_client.team_events(team, year, keys=True)
+        self.__cache.save(os.path.join('teams', team, str(year)), 'events_tba', events)
+        return events

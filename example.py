@@ -17,3 +17,5 @@ if __name__ == '__main__':
     print(f"Website: {api.get_team_website('frc2501')}")
     print(f"Rookie Year: {api.get_team_rookie_year('frc2501')}")
     print(f"Motto: {api.get_team_motto('frc2501')}")
+    for year in api.get_team_participation('frc2501'):
+        print(f"{year}: {api.get_team_events_year('frc2501', year)}")
