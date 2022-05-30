@@ -1,5 +1,4 @@
 from datetime import date, datetime
-import os
 import tbapy
 import statbotics
 from .cache import Cache
@@ -127,8 +126,8 @@ class FRC_PY:
         return (1992, status['max_season'])
 
     def get_teams(self, cached: bool = True, cache_expiry: int = 90) -> list:
-        if cached and self.__cache.is_cached('teams', 'index_tba'):
-            teams = self.__cache.get('teams', 'index_tba', cache_expiry)
+        if cached and self.__cache.is_cached(['teams'], 'index_tba'):
+            teams = self.__cache.get(['teams'], 'index_tba', cache_expiry)
             if teams is not None:
                 return teams
         teams = []
@@ -141,22 +140,22 @@ class FRC_PY:
                 teams.append(team)
             page += 1
         if cached:
-            self.__cache.save('teams', 'index_tba', teams)
+            self.__cache.save(['teams'], 'index_tba', teams)
         return teams
 
     def get_team_participation(self, team: str, cached: bool = True, cache_expiry: int = 90) -> list[int]:
-        if cached and self.__cache.is_cached(os.path.join('teams', team), 'participation_tba'):
-            participation = self.__cache.get(os.path.join('teams', team), 'participation_tba', cache_expiry)
+        if cached and self.__cache.is_cached(['teams', team], 'participation_tba'):
+            participation = self.__cache.get(['teams', team], 'participation_tba', cache_expiry)
             if participation is not None:
                 return participation
         participation = self.__tba_client.team_years(team)
         if cached:
-            self.__cache.save(os.path.join('teams', team), 'participation_tba', participation)
+            self.__cache.save(['teams', team], 'participation_tba', participation)
         return participation
 
     def __team_simple(self, team: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
-        if cached and self.__cache.is_cached(os.path.join('teams', team), 'simple_tba'):
-            simple = self.__cache.get(os.path.join('teams', team), 'simple_tba', cache_expiry)
+        if cached and self.__cache.is_cached(['teams', team], 'simple_tba'):
+            simple = self.__cache.get(['teams', team], 'simple_tba', cache_expiry)
             if simple is not None:
                 return simple
         simple = self.__tba_client.team(team, simple=True)
@@ -166,7 +165,7 @@ class FRC_PY:
             'name': simple.name
         }
         if cached:
-            self.__cache.save(os.path.join('teams', team), 'simple_tba', data)
+            self.__cache.save(['teams', team], 'simple_tba', data)
         return data
 
     def get_team_location(self, team: str, cached: bool = True, cache_expiry: int = 90) -> tuple[str, str, str]:
@@ -179,8 +178,8 @@ class FRC_PY:
         return self.__team_simple(team, cached, cache_expiry)['name']
 
     def __team(self, team: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
-        if cached and self.__cache.is_cached(os.path.join('teams', team), 'full_tba'):
-            data = self.__cache.get(os.path.join('teams', team), 'full_tba', cache_expiry)
+        if cached and self.__cache.is_cached(['teams', team], 'full_tba'):
+            data = self.__cache.get(['teams', team], 'full_tba', cache_expiry)
             if data is not None:
                 return data
         api_data = self.__tba_client.team(team)
@@ -193,7 +192,7 @@ class FRC_PY:
             # Documented in the TBA API docs, but not implemented in tbapy?
         }
         if cached:
-            self.__cache.save(os.path.join('teams', team), 'full_tba', data)
+            self.__cache.save(['teams', team], 'full_tba', data)
         return data
 
     def get_team_school(self, team: str, cached: bool = True, cache_expiry: int = 90) -> str:
@@ -209,29 +208,29 @@ class FRC_PY:
         return self.__team(team, cached, cache_expiry)['motto']
 
     def get_team_events_year(self, team: str, year: int, cached: bool = True, cache_expiry: int = 90) -> list[str]:
-        if cached and self.__cache.is_cached(os.path.join('teams', team, str(year)), 'events_tba'):
-            events = self.__cache.get(os.path.join('teams', team, str(year)), 'events_tba', cache_expiry)
+        if cached and self.__cache.is_cached(['teams', team, str(year)], 'events_tba'):
+            events = self.__cache.get(['teams', team, str(year)], 'events_tba', cache_expiry)
             if events is not None:
                 return events
         events = self.__tba_client.team_events(team, year, keys=True)
         if cached:
-            self.__cache.save(os.path.join('teams', team, str(year)), 'events_tba', events)
+            self.__cache.save(['teams', team, str(year)], 'events_tba', events)
         return events
 
     def get_events_year(self, year: int, cached: bool = True, cache_expiry: int = 90) -> list[str]:
-        if cached and self.__cache.is_cached(os.path.join('events', str(year)), 'events_tba'):
-            events = self.__cache.get(os.path.join('events', str(year)), 'events_tba', cache_expiry)
+        if cached and self.__cache.is_cached(['events', str(year)], 'events_tba'):
+            events = self.__cache.get(['events', str(year)], 'events_tba', cache_expiry)
             if events is not None:
                 return events
         events = self.__tba_client.events(year, keys=True)
         if cached:
-            self.__cache.save(os.path.join('events', str(year)), 'events_tba', events)
+            self.__cache.save(['events', str(year)], 'events_tba', events)
         return events
 
     def __event_simple(self, event: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
         year = FRC_PY.event_key_to_year(event)
-        if cached and self.__cache.is_cached(os.path.join('events', str(year), event), 'simple_tba'):
-            simple = self.__cache.get(os.path.join('events', str(year), event), 'simple_tba', cache_expiry)
+        if cached and self.__cache.is_cached(['events', str(year), event], 'simple_tba'):
+            simple = self.__cache.get(['events', str(year), event], 'simple_tba', cache_expiry)
             if simple is not None:
                 return simple
         simple = self.__tba_client.event(event, simple=True)
@@ -243,7 +242,7 @@ class FRC_PY:
             'district': simple.district
         }
         if cached:
-            self.__cache.save(os.path.join('events', str(year), event), 'simple_tba', data)
+            self.__cache.save(['events', str(year), event], 'simple_tba', data)
         return data
 
     def get_event_name(self, event: str, cached: bool = True, cache_expiry: int = 90) -> str:
@@ -264,42 +263,42 @@ class FRC_PY:
 
     def get_event_teams(self, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
         year = FRC_PY.event_key_to_year(event)
-        if cached and self.__cache.is_cached(os.path.join('events', str(year), event), 'teams_tba'):
-            teams = self.__cache.get(os.path.join('events', str(year), event), 'teams_tba', cache_expiry)
+        if cached and self.__cache.is_cached(['events', str(year), event], 'teams_tba'):
+            teams = self.__cache.get(['events', str(year), event], 'teams_tba', cache_expiry)
             if teams is not None:
                 return teams
         teams = self.__tba_client.event_teams(event, keys=True)
         if cached:
-            self.__cache.save(os.path.join('events', str(year), event), 'teams_tba', teams)
+            self.__cache.save(['events', str(year), event], 'teams_tba', teams)
         return teams
 
     def get_event_matches(self, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
         year = FRC_PY.event_key_to_year(event)
-        if cached and self.__cache.is_cached(os.path.join('events', str(year), event), 'matches_tba'):
-            matches = self.__cache.get(os.path.join('events', str(year), event), 'matches_tba', cache_expiry)
+        if cached and self.__cache.is_cached(['events', str(year), event], 'matches_tba'):
+            matches = self.__cache.get(['events', str(year), event], 'matches_tba', cache_expiry)
             if matches is not None:
                 return matches
         matches = self.__tba_client.event_matches(event, keys=True)
         if cached:
-            self.__cache.save(os.path.join('events', str(year), event), 'matches_tba', matches)
+            self.__cache.save(['events', str(year), event], 'matches_tba', matches)
         return matches
 
     def get_team_event_matches(self, team: str, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
         year = FRC_PY.event_key_to_year(event)
-        if cached and self.__cache.is_cached(os.path.join('teams', team, str(year), event), 'matches_tba'):
-            matches = self.__cache.get(os.path.join('teams', team, str(year), event), 'matches_tba', cache_expiry)
+        if cached and self.__cache.is_cached(['teams', team, str(year), event], 'matches_tba'):
+            matches = self.__cache.get(['teams', team, str(year), event], 'matches_tba', cache_expiry)
             if matches is not None:
                 return matches
         matches = self.__tba_client.team_matches(team, event, keys=True)
         if cached:
-            self.__cache.save(os.path.join('teams', team, str(year), event), 'matches_tba', matches)
+            self.__cache.save(['teams', team, str(year), event], 'matches_tba', matches)
         return matches
 
     def __match_simple(self, match: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
         year = FRC_PY.match_key_to_year(match)
         event = FRC_PY.match_key_to_event(match)
-        if cached and self.__cache.is_cached(os.path.join('matches', str(year), event, match), 'simple_tba'):
-            simple = self.__cache.get(os.path.join('matches', str(year), event, match), 'simple_tba', cache_expiry)
+        if cached and self.__cache.is_cached(['matches', str(year), event, match], 'simple_tba'):
+            simple = self.__cache.get(['matches', str(year), event, match], 'simple_tba', cache_expiry)
             if simple is not None:
                 return simple
         simple = self.__tba_client.match(match, simple=True)
@@ -328,7 +327,7 @@ class FRC_PY:
             'actual_time': simple.actual_time
         }
         if cached:
-            self.__cache.save(os.path.join('matches', str(year), event, match), 'simple_tba', data)
+            self.__cache.save(['matches', str(year), event, match], 'simple_tba', data)
         return data
 
     def get_match_level(self, match: str, cached: bool = True, cache_expiry: int = 90) -> str:
