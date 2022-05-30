@@ -31,3 +31,4 @@ if __name__ == '__main__':
     print(f"Type: {FRC_PY.event_type_to_str(api.get_event_type('2022mndu'))}")
     print(f"Dates: {api.get_event_dates('2022mndu')}")
     print(f"District: {api.get_event_district('2022mndu')}")
+    print(f"Teams: {len(api.get_event_teams('2022mndu'))}")

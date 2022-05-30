@@ -204,8 +204,9 @@ class FRC_PY:
         return events
 
     def __event_simple(self, event: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
-        if cached and self.__cache.is_cached(os.path.join('events', event), 'simple_tba'):
-            simple = self.__cache.get(os.path.join('events', event), 'simple_tba', cache_expiry)
+        year = FRC_PY._event_key_to_year(event)
+        if cached and self.__cache.is_cached(os.path.join('events', str(year), event), 'simple_tba'):
+            simple = self.__cache.get(os.path.join('events', str(year), event), 'simple_tba', cache_expiry)
             if simple is not None:
                 return simple
         simple = self.__tba_client.event(event, simple=True)
@@ -217,7 +218,7 @@ class FRC_PY:
             'district': simple.district
         }
         if cached:
-            self.__cache.save(os.path.join('events', event), 'simple_tba', data)
+            self.__cache.save(os.path.join('events', str(year), event), 'simple_tba', data)
         return data
 
     def get_event_name(self, event: str, cached: bool = True, cache_expiry: int = 90) -> str:
@@ -235,3 +236,14 @@ class FRC_PY:
 
     def get_event_district(self, event: str, cached: bool = True, cache_expiry: int = 90) -> str:
         return self.__event_simple(event, cached, cache_expiry)['district']
+
+    def get_event_teams(self, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
+        year = FRC_PY._event_key_to_year(event)
+        if cached and self.__cache.is_cached(os.path.join('events', str(year), event), 'teams_tba'):
+            teams = self.__cache.get(os.path.join('events', str(year), event), 'teams_tba', cache_expiry)
+            if teams is not None:
+                return teams
+        teams = self.__tba_client.event_teams(event, keys=True)
+        if cached:
+            self.__cache.save(os.path.join('events', str(year), event), 'teams_tba', teams)
+        return teams
