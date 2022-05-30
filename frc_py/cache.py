@@ -16,7 +16,7 @@ class Cache:
             data = json.load(f)
             time = datetime.strptime(data['time'], '%Y-%m-%dT%H:%M:%S.%f')
             if time + timedelta(days=cache_expiry) < datetime.now():
-                return None
+                return None # Expired entries return None to indicate they should be refreshed
             return data['data']
 
     def save(self, path: str, file: str, data: any) -> None:
