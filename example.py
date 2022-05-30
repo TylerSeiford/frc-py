@@ -6,7 +6,6 @@ if __name__ == '__main__':
     TOKEN = os.environ['SECRET_TBA_TOKEN'] # Replace with your TBA token
     api = FRC_PY(TOKEN)
 
-    # Team
     print('***** Teams *****')
     teams = api.get_teams()
     print(f"Found {len(teams)} teams")
@@ -21,7 +20,6 @@ if __name__ == '__main__':
     for year in api.get_team_participation('frc2501'):
         print(f"{year}: {api.get_team_events_year('frc2501', year)}")
 
-    # Event
     print('***** Events *****')
     min_year, max_year = api.get_year_range()
     for year in range(min_year, max_year + 1):
@@ -32,3 +30,7 @@ if __name__ == '__main__':
     print(f"Dates: {api.get_event_dates('2022mndu')}")
     print(f"District: {api.get_event_district('2022mndu')}")
     print(f"Teams: {len(api.get_event_teams('2022mndu'))}")
+    print(f"Matches: {len(api.get_event_matches('2022mndu'))}")
+
+    print('***** Matches *****')
+    

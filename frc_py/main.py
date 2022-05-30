@@ -247,3 +247,14 @@ class FRC_PY:
         if cached:
             self.__cache.save(os.path.join('events', str(year), event), 'teams_tba', teams)
         return teams
+
+    def get_event_matches(self, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
+        year = FRC_PY._event_key_to_year(event)
+        if cached and self.__cache.is_cached(os.path.join('events', str(year), event), 'matches_tba'):
+            matches = self.__cache.get(os.path.join('events', str(year), event), 'matches_tba', cache_expiry)
+            if matches is not None:
+                return matches
+        matches = self.__tba_client.event_matches(event, keys=True)
+        if cached:
+            self.__cache.save(os.path.join('events', str(year), event), 'matches_tba', matches)
+        return matches
