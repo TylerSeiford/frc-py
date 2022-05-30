@@ -1,3 +1,4 @@
+from datetime import date
 import os
 import tbapy
 import statbotics
@@ -20,6 +21,71 @@ class FRC_PY:
     def _match_key_to_event(match: str) -> str:
         return match.split('_')[0]
 
+    @staticmethod
+    def event_type_to_str(event_type: int) -> str:
+        match(event_type):
+            case 0:
+                return 'Regional'
+            case 1:
+                return 'District'
+            case 2:
+                return 'District Championship'
+            case 3:
+                return 'Championship Division'
+            case 4:
+                return 'Einstein'
+            case 5:
+                return 'District Championship Division'
+            case 6:
+                return 'Festival of Champions'
+            case 7:
+                return 'Remote'
+            case 99:
+                return 'Offseason'
+            case 100:
+                return 'Preseason'
+            case _:
+                return 'Unknown'
+
+    @staticmethod
+    def is_event_type_district(event_type: int) -> bool:
+        return FRC_PY.event_type_to_str(event_type) in [
+            'District',
+            'District Championship',
+            'District Championship Division'
+        ]
+
+    @staticmethod
+    def is_event_type_non_championship(event_type: int) -> bool:
+        return FRC_PY.event_type_to_str(event_type) in [
+            'Regional',
+            'District',
+            'District Championship',
+            'District Championship Division',
+            'Remote'
+        ]
+
+    @staticmethod
+    def is_event_type_championship(event_type: int) -> bool:
+        return FRC_PY.event_type_to_str(event_type) in [
+            'Championship Division',
+            'Einstein'
+        ]
+
+    @staticmethod
+    def is_event_type_season(event_type: int) -> bool:
+        return FRC_PY.event_type_to_str(event_type) in [
+            'Regional',
+            'District',
+            'District Championship',
+            'District Championship Division',
+            'Championship Division',
+            'Einstein',
+            'Festival of Champions',
+            'Remote'
+        ]
+
+
     def __init__(self, tba_token: str):
         self.__tba_client = tbapy.TBA(tba_token)
         self.__statbotics_client = statbotics.Statbotics()
@@ -35,7 +101,7 @@ class FRC_PY:
         status = self.__tba_client.status()
         return (1992, status['max_season'])
 
-    def get_team_index(self, cached: bool = True, cache_expiry: int = 90) -> list:
+    def get_teams(self, cached: bool = True, cache_expiry: int = 90) -> list:
         if cached and self.__cache.is_cached('teams', 'index_tba'):
             teams = self.__cache.get('teams', 'index_tba', cache_expiry)
             if teams is not None:
@@ -49,7 +115,8 @@ class FRC_PY:
             for team in teams_page:
                 teams.append(team)
             page += 1
-        self.__cache.save('teams', 'index_tba', teams)
+        if cached:
+            self.__cache.save('teams', 'index_tba', teams)
         return teams
 
     def get_team_participation(self, team: str, cached: bool = True, cache_expiry: int = 90) -> list[int]:
@@ -58,7 +125,8 @@ class FRC_PY:
             if participation is not None:
                 return participation
         participation = self.__tba_client.team_years(team)
-        self.__cache.save(os.path.join('teams', team), 'participation_tba', participation)
+        if cached:
+            self.__cache.save(os.path.join('teams', team), 'participation_tba', participation)
         return participation
 
     def __team_simple(self, team: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
@@ -72,7 +140,8 @@ class FRC_PY:
             'nickname': simple.nickname,
             'name': simple.name
         }
-        self.__cache.save(os.path.join('teams', team), 'simple_tba', data)
+        if cached:
+            self.__cache.save(os.path.join('teams', team), 'simple_tba', data)
         return data
 
     def get_team_location(self, team: str, cached: bool = True, cache_expiry: int = 90) -> tuple[str, str, str]:
@@ -98,7 +167,8 @@ class FRC_PY:
             # 'home_championships': api_data.home_championship
             # Documented in the TBA API docs, but not implemented in tbapy?
         }
-        self.__cache.save(os.path.join('teams', team), 'full_tba', data)
+        if cached:
+            self.__cache.save(os.path.join('teams', team), 'full_tba', data)
         return data
 
     def get_team_school(self, team: str, cached: bool = True, cache_expiry: int = 90) -> str:
@@ -119,5 +189,49 @@ class FRC_PY:
             if events is not None:
                 return events
         events = self.__tba_client.team_events(team, year, keys=True)
-        self.__cache.save(os.path.join('teams', team, str(year)), 'events_tba', events)
+        if cached:
+            self.__cache.save(os.path.join('teams', team, str(year)), 'events_tba', events)
         return events
+
+    def get_events_year(self, year: int, cached: bool = True, cache_expiry: int = 90) -> list[str]:
+        if cached and self.__cache.is_cached(os.path.join('events', str(year)), 'events_tba'):
+            events = self.__cache.get(os.path.join('events', str(year)), 'events_tba', cache_expiry)
+            if events is not None:
+                return events
+        events = self.__tba_client.events(year, keys=True)
+        if cached:
+            self.__cache.save(os.path.join('events', str(year)), 'events_tba', events)
+        return events
+
+    def __event_simple(self, event: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
+        if cached and self.__cache.is_cached(os.path.join('events', event), 'simple_tba'):
+            simple = self.__cache.get(os.path.join('events', event), 'simple_tba', cache_expiry)
+            if simple is not None:
+                return simple
+        simple = self.__tba_client.event(event, simple=True)
+        data = {
+            'name': simple.name,
+            'location': (simple.city, simple.state_prov, simple.country),
+            'type': simple.event_type,
+            'dates': (simple.start_date, simple.end_date),
+            'district': simple.district
+        }
+        if cached:
+            self.__cache.save(os.path.join('events', event), 'simple_tba', data)
+        return data
+
+    def get_event_name(self, event: str, cached: bool = True, cache_expiry: int = 90) -> str:
+        return self.__event_simple(event, cached, cache_expiry)['name']
+
+    def get_event_location(self, event: str, cached: bool = True, cache_expiry: int = 90) -> tuple[str, str, str]:
+        return self.__event_simple(event, cached, cache_expiry)['location']
+
+    def get_event_type(self, event: str, cached: bool = True, cache_expiry: int = 90) -> str:
+        return self.__event_simple(event, cached, cache_expiry)['type']
+
+    def get_event_dates(self, event: str, cached: bool = True, cache_expiry: int = 90) -> tuple[str, str]:
+        start, end = self.__event_simple(event, cached, cache_expiry)['dates']
+        return date.fromisoformat(start), date.fromisoformat(end)
+
+    def get_event_district(self, event: str, cached: bool = True, cache_expiry: int = 90) -> str:
+        return self.__event_simple(event, cached, cache_expiry)['district']
