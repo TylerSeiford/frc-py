@@ -90,7 +90,6 @@ class FRC_PY:
             if data is not None:
                 return data
         api_data = self.__tba_client.team(team)
-        print(api_data)
         data = {
             'school_name': api_data.school_name,
             'website': api_data.website,
