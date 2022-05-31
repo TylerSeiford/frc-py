@@ -47,7 +47,8 @@
 		"donjayamanne.python-extension-pack",
 		"KevinRose.vsc-python-indent",
 		"ms-azuretools.vscode-docker",
-		"eamodio.gitlens"
+		"eamodio.gitlens",
+		"qwtel.sqlite-viewer"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
