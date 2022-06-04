@@ -16,6 +16,8 @@ class Cache:
         self.__init_team_year_events()
         self.__init_year_events()
         self.__init_events()
+        self.__init_event_teams()
+        self.__init_event_matches()
         self.__init_match_simple()
 
 
@@ -239,6 +241,72 @@ class Cache:
 
     def _delete_event(self, event_key: str) -> None:
         self.__connection.execute('DELETE FROM events WHERE key = ?', [event_key])
+        self.__connection.commit()
+
+
+    def __init_event_teams(self) -> None:
+        self.__connection.execute('''CREATE TABLE IF NOT EXISTS event_teams (
+            last_updated datetime,
+            event text, teams text
+        )''')
+        self.__connection.commit()
+
+    def save_event_teams(self, event_key: str, teams: list[str]) -> None:
+        self.__connection.execute('INSERT INTO event_teams VALUES (?, ?, ?)', (
+            datetime.utcnow().isoformat(),
+            event_key, json.dumps(teams)
+        ))
+        self.__connection.commit()
+
+    def get_event_teams(self, event_key: str, cache_expiry: int) -> list[str] | None:
+        cursor = self.__connection.cursor()
+        cursor.execute('SELECT * FROM event_teams WHERE event = ?', [event_key])
+        result = cursor.fetchone()
+        cursor.close()
+        if result is None:
+            return None
+        timestamp, event, teams = result
+        timestamp = datetime.fromisoformat(timestamp)
+        if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
+            self._delete_event_teams(event_key)
+            return None
+        return json.loads(teams)
+
+    def _delete_event_teams(self, event_key: str) -> None:
+        self.__connection.execute('DELETE FROM event_teams WHERE event = ?', [event_key])
+        self.__connection.commit()
+
+
+    def __init_event_matches(self) -> None:
+        self.__connection.execute('''CREATE TABLE IF NOT EXISTS event_matches (
+            last_updated datetime,
+            event text, matches text
+        )''')
+        self.__connection.commit()
+
+    def save_event_matches(self, event_key: str, matches: list[str]) -> None:
+        self.__connection.execute('INSERT INTO event_matches VALUES (?, ?, ?)', (
+            datetime.utcnow().isoformat(),
+            event_key, json.dumps(matches)
+        ))
+        self.__connection.commit()
+
+    def get_event_matches(self, event_key: str, cache_expiry: int) -> list[str] | None:
+        cursor = self.__connection.cursor()
+        cursor.execute('SELECT * FROM event_matches WHERE event = ?', [event_key])
+        result = cursor.fetchone()
+        cursor.close()
+        if result is None:
+            return None
+        timestamp, event, matches = result
+        timestamp = datetime.fromisoformat(timestamp)
+        if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
+            self._delete_event_matches(event_key)
+            return None
+        return json.loads(matches)
+
+    def _delete_event_matches(self, event_key: str) -> None:
+        self.__connection.execute('DELETE FROM event_matches WHERE event = ?', [event_key])
         self.__connection.commit()
 
 

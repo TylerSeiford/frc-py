@@ -53,8 +53,8 @@ if __name__ == '__main__':
     print(f"Divisions: {event.divisions()}")
     print(f"Parent event: {event.parent_event_key()}")
     print(f"Playoff Type: {event.playoff_type_str()}")
-    print(f"Teams: {len(api.get_event_teams('2022mndu'))}")
-    print(f"Matches: {len(api.get_event_matches('2022mndu'))}")
+    print(f"Teams: {len(api.event_teams('2022mndu'))}")
+    print(f"Matches: {len(api.event_matches('2022mndu'))}")
 
     print('***** Team @ Event *****')
     print(f"Matches: {len(api.get_team_event_matches('frc2501', '2022mndu'))}")

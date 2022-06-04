@@ -148,24 +148,24 @@ class FRC_PY:
             self.__cache.save_event(event)
         return event
 
-    def get_event_teams(self, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
-        if cached and self.__cache.is_cached(['events', event], 'teams_tba'):
-            teams = self.__cache.get(['events', event], 'teams_tba', cache_expiry)
+    def event_teams(self, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
+        if cached:
+            teams = self.__cache.get_event_teams(event, cache_expiry)
             if teams is not None:
                 return teams
         teams = self.__tba_client.event_teams(event, keys=True)
         if cached:
-            self.__cache.save(['events', event], 'teams_tba', teams)
+            self.__cache.save_event_teams(event, teams)
         return teams
 
-    def get_event_matches(self, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
-        if cached and self.__cache.is_cached(['events', event], 'matches_tba'):
-            matches = self.__cache.get(['events', event], 'matches_tba', cache_expiry)
+    def event_matches(self, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
+        if cached:
+            matches = self.__cache.get_event_matches(event, cache_expiry)
             if matches is not None:
                 return matches
         matches = self.__tba_client.event_matches(event, keys=True)
         if cached:
-            self.__cache.save(['events', event], 'matches_tba', matches)
+            self.__cache.save_event_matches(event, matches)
         return matches
 
     def get_team_event_matches(self, team: str, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
