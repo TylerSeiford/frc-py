@@ -106,14 +106,14 @@ class FRC_PY:
             self.__cache.save_team_year_events(team, year, events)
         return events
 
-    def get_events_year(self, year: int, cached: bool = True, cache_expiry: int = 90) -> list[str]:
-        if cached and self.__cache.is_cached(['events', str(year)], 'events_tba'):
-            events = self.__cache.get(['events', str(year)], 'events_tba', cache_expiry)
+    def year_events(self, year: int, cached: bool = True, cache_expiry: int = 90) -> list[str]:
+        if cached:
+            events = self.__cache.get_year_events(year, cache_expiry)
             if events is not None:
                 return events
         events = self.__tba_client.events(year, keys=True)
         if cached:
-            self.__cache.save(['events', str(year)], 'events_tba', events)
+            self.__cache.save_year_events(year, events)
         return events
 
     def event(self, key: str, cached: bool = True, cache_expiry: int = 90) -> Event:

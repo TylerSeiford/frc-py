@@ -14,6 +14,7 @@ class Cache:
         self.__init_teams()
         self.__init_team_years()
         self.__init_team_year_events()
+        self.__init_year_events()
         self.__init_events()
         self.__init_match_simple()
 
@@ -94,7 +95,7 @@ class Cache:
     def __init_team_year_events(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS team_year_events (
             last_updated datetime,
-            key text, year text, events text
+            key text, year int, events text
         )''')
         self.__connection.commit()
 
@@ -121,6 +122,39 @@ class Cache:
 
     def _delete_team_year_events(self, team_key: str, year: int) -> None:
         self.__connection.execute('DELETE FROM team_year_events WHERE key = ? AND year = ?', [team_key, year])
+        self.__connection.commit()
+
+
+    def __init_year_events(self) -> None:
+        self.__connection.execute('''CREATE TABLE IF NOT EXISTS year_events (
+            last_updated datetime,
+            year int, events text
+        )''')
+        self.__connection.commit()
+
+    def save_year_events(self, year: int, events: list[str]) -> None:
+        self.__connection.execute('INSERT INTO year_events VALUES (?, ?, ?)', (
+            datetime.utcnow().isoformat(),
+            year, json.dumps(events)
+        ))
+        self.__connection.commit()
+
+    def get_year_events(self, year: int, cache_expiry: int) -> list[str] | None:
+        cursor = self.__connection.cursor()
+        cursor.execute('SELECT * FROM year_events WHERE year = ?', [year])
+        result = cursor.fetchone()
+        cursor.close()
+        if result is None:
+            return None
+        timestamp, year, events = result
+        timestamp = datetime.fromisoformat(timestamp)
+        if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
+            self._delete_year_events(year)
+            return None
+        return json.loads(events)
+
+    def _delete_year_events(self, year: int) -> None:
+        self.__connection.execute('DELETE FROM year_events WHERE year = ?', [year])
         self.__connection.commit()
 
 

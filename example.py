@@ -25,7 +25,7 @@ if __name__ == '__main__':
     print('***** Events *****')
     min_year, max_year = api.year_range()
     for year in range(min_year, max_year + 1):
-        print(f"{year}: {len(api.get_events_year(year))}")
+        print(f"{year}: {len(api.year_events(year))}")
     event = api.event('2022mndu')
     print(f"Name: {event.name()}")
     print(f"Location: {event.location()}")
