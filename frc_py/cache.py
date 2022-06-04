@@ -13,6 +13,7 @@ class Cache:
         self.__connection = sqlite3.connect(os.path.join(cache_dir, 'cache.db'))
         self.__init_teams()
         self.__init_team_years()
+        self.__init_team_year_events()
         self.__init_events()
         self.__init_match_simple()
 
@@ -87,6 +88,39 @@ class Cache:
 
     def _delete_team_years(self, team_key: str) -> None:
         self.__connection.execute('DELETE FROM team_years WHERE key = ?', [team_key])
+        self.__connection.commit()
+
+
+    def __init_team_year_events(self) -> None:
+        self.__connection.execute('''CREATE TABLE IF NOT EXISTS team_year_events (
+            last_updated datetime,
+            key text, year text, events text
+        )''')
+        self.__connection.commit()
+
+    def save_team_year_events(self, team_key: str, year: int, events: list[str]) -> None:
+        self.__connection.execute('INSERT INTO team_year_events VALUES (?, ?, ?, ?)', (
+            datetime.utcnow().isoformat(),
+            team_key, year, json.dumps(events)
+        ))
+        self.__connection.commit()
+
+    def get_team_year_events(self, team_key: str, year: int, cache_expiry: int) -> list[str] | None:
+        cursor = self.__connection.cursor()
+        cursor.execute('SELECT * FROM team_year_events WHERE key = ? AND year = ?', [team_key, year])
+        result = cursor.fetchone()
+        cursor.close()
+        if result is None:
+            return None
+        timestamp, key, year, events = result
+        timestamp = datetime.fromisoformat(timestamp)
+        if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
+            self._delete_team_year_events(team_key, year)
+            return None
+        return json.loads(events)
+
+    def _delete_team_year_events(self, team_key: str, year: int) -> None:
+        self.__connection.execute('DELETE FROM team_year_events WHERE key = ? AND year = ?', [team_key, year])
         self.__connection.commit()
 
 

@@ -44,7 +44,7 @@ class FRC_PY:
     def _stat_client(self) -> statbotics.Statbotics:
         return self.__statbotics_client
 
-    def get_year_range(self) -> tuple[int, int]:
+    def year_range(self) -> tuple[int, int]:
         status = self.__tba_client.status()
         return (1992, status['max_season'])
 
@@ -96,14 +96,14 @@ class FRC_PY:
             self.__cache.save_team(team)
         return team
 
-    def get_team_events_year(self, team: str, year: int, cached: bool = True, cache_expiry: int = 90) -> list[str]:
-        if cached and self.__cache.is_cached(['teams', team, str(year)], 'events_tba'):
-            events = self.__cache.get(['teams', team, str(year)], 'events_tba', cache_expiry)
+    def team_year_events(self, team: str, year: int, cached: bool = True, cache_expiry: int = 90) -> list[str]:
+        if cached:
+            events = self.__cache.get_team_year_events(team, year, cache_expiry)
             if events is not None:
                 return events
         events = self.__tba_client.team_events(team, year, keys=True)
         if cached:
-            self.__cache.save(['teams', team, str(year)], 'events_tba', events)
+            self.__cache.save_team_year_events(team, year, events)
         return events
 
     def get_events_year(self, year: int, cached: bool = True, cache_expiry: int = 90) -> list[str]:

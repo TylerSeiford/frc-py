@@ -20,10 +20,10 @@ if __name__ == '__main__':
     print(f"Rookie Year: {team.rookie_year()}")
     print(f"Motto: {team.motto()}")
     for year in api.team_years('frc2501'):
-        print(f"{year}: {api.get_team_events_year('frc2501', year)}")
+        print(f"{year}: {api.team_year_events('frc2501', year)}")
 
     print('***** Events *****')
-    min_year, max_year = api.get_year_range()
+    min_year, max_year = api.year_range()
     for year in range(min_year, max_year + 1):
         print(f"{year}: {len(api.get_events_year(year))}")
     event = api.event('2022mndu')
