@@ -1,9 +1,29 @@
 import datetime
+import json
 
+
+
+class Location:
+    def __init__(self, city: str, state_prov: str, country: str):
+        self.__city = city
+        self.__state_prov = state_prov
+        self.__country = country
+
+    def city(self) -> str:
+        return self.__city
+
+    def state_prov(self) -> str:
+        return self.__state_prov
+
+    def country(self) -> str:
+        return self.__country
+
+    def __str__(self) -> str:
+        return f"{self.__city}, {self.__state_prov}, {self.__country}"
 
 
 class TeamSimple:
-    def __init__(self, key: str, nickname: str, name: str, location: tuple[str, str, str]):
+    def __init__(self, key: str, nickname: str, name: str, location: Location):
         self.__key = key
         self.__nickname = nickname
         self.__name = name
@@ -18,7 +38,7 @@ class TeamSimple:
     def get_name(self) -> str:
         return self.__name
 
-    def get_location(self) -> tuple[str, str, str]:
+    def get_location(self) -> Location:
         return self.__location
 
 
@@ -30,24 +50,24 @@ class Team:
         self.__rookie_year = rookie_year
         self.__motto = motto
 
-    def get_key(self) -> str:
+    def key(self) -> str:
         return self.__key
 
-    def get_school_name(self) -> str:
+    def school_name(self) -> str:
         return self.__school_name
 
-    def get_website(self) -> str:
+    def website(self) -> str:
         return self.__website
 
-    def get_rookie_year(self) -> str:
+    def rookie_year(self) -> str:
         return self.__rookie_year
 
-    def get_motto(self) -> str:
+    def motto(self) -> str:
         return self.__motto
 
 
 class EventSimple:
-    def __init__(self, key: str, name: str, location: tuple[str, str, str], event_type: str, dates: tuple[str, str],
+    def __init__(self, key: str, name: str, location: Location, event_type: int, dates: tuple[str, str],
             district_key: str):
         self.__key = key
         self.__name = name
@@ -56,29 +76,55 @@ class EventSimple:
         self.__dates = dates
         self.__district_key = district_key
 
-    def get_key(self) -> str:
+    def key(self) -> str:
         return self.__key
 
-    def get_name(self) -> str:
+    def name(self) -> str:
         return self.__name
 
-    def get_location(self) -> tuple[str, str, str]:
+    def location(self) -> Location:
         return self.__location
 
-    def get_type(self) -> str:
+    def event_type(self) -> int:
         return self.__type
 
-    def get_dates(self) -> tuple[str, str]:
+    def dates(self) -> tuple[str, str]:
         return self.__dates
 
-    def get_district_key(self) -> str:
+    def district_key(self) -> str:
         return self.__district_key
+
+
+class MatchAlliance:
+    def __init__(self, teams: list[str], dq: list[str], surrogate: list[str]):
+        self.__teams = teams
+        self.__dq = dq
+        self.__surrogate = surrogate
+
+    def teams(self) -> list[str]:
+        return self.__teams
+
+    def dq(self) -> list[str]:
+        return self.__dq
+
+    def surrogate(self) -> list[str]:
+        return self.__surrogate
+
+    def __str__(self) -> str:
+        return f"{self.__teams}, {self.__dq}, {self.__surrogate}"
+
+    def toJSON(self) -> str:
+        return json.dumps({
+            'teams': self.__teams,
+            'dq': self.__dq,
+            'surrogate': self.__surrogate
+        })
 
 
 class MatchSimple:
     def __init__(self, key: str, level: str, set_number: int, match_number: int,
             red_score: int, blue_score: int,
-            red_teams: dict[str, list[str]], blue_teams: dict[str, list[str]],
+            red_teams: MatchAlliance, blue_teams: MatchAlliance,
             winner: str,
             schedule_time: datetime, predicted_time: datetime, actual_time: datetime):
         self.__key = key
@@ -94,38 +140,38 @@ class MatchSimple:
         self.__predicted_time = predicted_time
         self.__actual_time = actual_time
 
-    def get_key(self) -> str:
+    def key(self) -> str:
         return self.__key
 
-    def get_level(self) -> str:
+    def level(self) -> str:
         return self.__level
 
-    def get_set_number(self) -> int:
+    def set_number(self) -> int:
         return self.__set_number
 
-    def get_match_number(self) -> int:
+    def match_number(self) -> int:
         return self.__match_number
 
-    def get_red_score(self) -> int:
+    def red_score(self) -> int:
         return self.__red_score
 
-    def get_blue_score(self) -> int:
+    def blue_score(self) -> int:
         return self.__blue_score
 
-    def get_red_teams(self) -> dict[str, list[str]]:
+    def red_teams(self) -> MatchAlliance:
         return self.__red_teams
 
-    def get_blue_teams(self) -> dict[str, list[str]]:
+    def blue_teams(self) -> MatchAlliance:
         return self.__blue_teams
 
-    def get_winner(self) -> str:
+    def winner(self) -> str:
         return self.__winner
 
-    def get_schedule_time(self) -> datetime:
+    def schedule_time(self) -> datetime:
         return self.__schedule_time
 
-    def get_predicted_time(self) -> datetime:
+    def predicted_time(self) -> datetime:
         return self.__predicted_time
 
-    def get_actual_time(self) -> datetime:
+    def actual_time(self) -> datetime:
         return self.__actual_time
