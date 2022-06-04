@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import os
 import sqlite3
 import json
-from .models import TeamSimple, Team, EventSimple, MatchSimple
+from .models import Location, TeamSimple, Team, EventSimple, MatchAlliance, MatchSimple
 
 
 
@@ -26,11 +26,11 @@ class Cache:
         self.__connection.commit()
 
     def save_team_simple(self, team: TeamSimple) -> None:
-        city, state_prov, country = team.get_location()
+        location = team.get_location()
         self.__connection.execute('INSERT INTO team_simple VALUES (?, ?, ?, ?, ?, ?, ?)', (
             datetime.utcnow().isoformat(),
             team.get_key(), team.get_nickname(), team.get_name(),
-            city, state_prov, country
+            location.city(), location.state_prov(), location.country()
         ))
         self.__connection.commit()
 
@@ -46,7 +46,7 @@ class Cache:
         if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
             self._delete_team_simple(team_key)
             return None
-        return TeamSimple(key, nickname, name, (city, state_prov, country))
+        return TeamSimple(key, nickname, name, Location(city, state_prov, country))
 
     def _delete_team_simple(self, team_key: str) -> None:
         self.__connection.execute('DELETE FROM team_simple WHERE key = ?', team_key)
@@ -64,8 +64,8 @@ class Cache:
     def save_team(self, team: Team) -> None:
         self.__connection.execute('INSERT INTO team VALUES (?, ?, ?, ?, ?, ?)', (
             datetime.utcnow().isoformat(),
-            team.get_key(), team.get_school_name(), team.get_website(),
-            team.get_rookie_year(), team.get_motto()
+            team.key(), team.school_name(), team.website(),
+            team.rookie_year(), team.motto()
         ))
         self.__connection.commit()
 
@@ -100,15 +100,15 @@ class Cache:
         self.__connection.commit()
 
     def save_event_simple(self, event: EventSimple) -> None:
-        city, state_prov, country = event.get_location()
-        start, end = event.get_dates()
+        location = event.location()
+        start, end = event.dates()
         self.__connection.execute('INSERT INTO event_simple VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
             datetime.utcnow().isoformat(),
-            event.get_key(), event.get_name(),
-            city, state_prov, country,
-            event.get_type(),
+            event.key(), event.name(),
+            location.city(), location.state_prov(), location.country(),
+            event.event_type(),
             start, end,
-            event.get_district_key()
+            event.district_key()
         ))
         self.__connection.commit()
 
@@ -124,7 +124,7 @@ class Cache:
         if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
             self._delete_event_simple(event_key)
             return None
-        return EventSimple(key, name, (city, state_prov, country), event_type, (start, end), event_district)
+        return EventSimple(key, name, Location(city, state_prov, country), event_type, (start, end), event_district)
 
     def _delete_event_simple(self, event_key: str) -> None:
         self.__connection.execute('DELETE FROM event_simple WHERE key = ?', [event_key])
@@ -145,11 +145,11 @@ class Cache:
     def save_match_simple(self, match: MatchSimple) -> None:
         self.__connection.execute('INSERT INTO match_simple VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
             datetime.utcnow().isoformat(),
-            match.get_key(), match.get_level(), match.get_set_number(), match.get_match_number(),
-            match.get_red_score(), match.get_blue_score(),
-            json.dumps(match.get_red_teams()), json.dumps(match.get_blue_teams()),
-            match.get_winner(),
-            match.get_schedule_time(), match.get_predicted_time(), match.get_actual_time()
+            match.key(), match.level(), match.set_number(), match.match_number(),
+            match.red_score(), match.blue_score(),
+            match.red_teams().toJSON(), match.blue_teams().toJSON(),
+            match.winner(),
+            match.schedule_time(), match.predicted_time(), match.actual_time()
         ))
         self.__connection.commit()
 
@@ -165,8 +165,12 @@ class Cache:
         if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
             self._delete_match_simple(match_key)
             return None
+        red_teams = json.loads(red_teams)
+        red_teams = MatchAlliance(red_teams['teams'], red_teams['dq'], red_teams['surrogate'])
+        blue_teams = json.loads(blue_teams)
+        blue_teams = MatchAlliance(blue_teams['teams'], blue_teams['dq'], blue_teams['surrogate'])
         return MatchSimple(key, level, set_number, match_number, red_score, blue_score,
-                           json.loads(red_teams), json.loads(blue_teams), winner,
+                           red_teams, blue_teams, winner,
                            scheduled_time, predicted_time, actual_time)
 
     def _delete_match_simple(self, match_key: str) -> None:
@@ -179,5 +183,9 @@ class Cache:
         return False
 
     def save(self, path: list[str], file: str, data: any) -> None:
-        print(f"Saving {os.path.join(*path, file)}: {data}")
+        # print(f"Saving {os.path.join(*path, file)}: {data}")
+        return None
+
+    def get(self, path: list[str], file: str) -> any:
+        # print(f"Getting {os.path.join(*path, file)}")
         return None
