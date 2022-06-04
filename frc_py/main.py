@@ -209,7 +209,7 @@ class FRC_PY:
             self.__cache.save(['events', str(year)], 'events_tba', events)
         return events
 
-    def event_simple(self, key: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
+    def event_simple(self, key: str, cached: bool = True, cache_expiry: int = 90) -> EventSimple:
         if cached:
             event = self.__cache.get_event_simple(key, cache_expiry)
             if event is not None:
@@ -262,7 +262,7 @@ class FRC_PY:
             self.__cache.save(['teams', team, str(year), event], 'matches_tba', matches)
         return matches
 
-    def match_simple(self, key: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
+    def match_simple(self, key: str, cached: bool = True, cache_expiry: int = 90) -> MatchSimple:
         if cached:
             simple = self.__cache.get_match_simple(key, cache_expiry)
             if simple is not None:

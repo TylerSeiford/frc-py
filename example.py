@@ -1,6 +1,5 @@
 import os
 from frc_py import FRC_PY
-from frc_py.models import TeamSimple, Team, EventSimple, MatchSimple
 
 
 
@@ -12,11 +11,11 @@ if __name__ == '__main__':
     teams: list[str] = api.get_teams()
     print(f"Found {len(teams)} teams")
     print(f"Years: {api.get_team_participation('frc2501')}")
-    team_simple: TeamSimple = api.team_simple('frc2501')
+    team_simple = api.team_simple('frc2501')
     print(f"Location: {team_simple.get_location()}")
     print(f"Nickname: {team_simple.get_nickname()}")
     print(f"Name: {team_simple.get_name()}")
-    team: Team = api.team('frc2501')
+    team = api.team('frc2501')
     print(f"School: {team.school_name()}")
     print(f"Website: {team.website()}")
     print(f"Rookie Year: {team.rookie_year()}")
@@ -28,7 +27,7 @@ if __name__ == '__main__':
     min_year, max_year = api.get_year_range()
     for year in range(min_year, max_year + 1):
         print(f"{year}: {len(api.get_events_year(year))}")
-    event_simple: EventSimple = api.event_simple('2022mndu')
+    event_simple = api.event_simple('2022mndu')
     print(f"Name: {event_simple.name()}")
     print(f"Location: {event_simple.location()}")
     print(f"Type: {FRC_PY.event_type_to_str(event_simple.event_type())}")
@@ -41,7 +40,7 @@ if __name__ == '__main__':
     print(f"Matches: {len(api.get_team_event_matches('frc2501', '2022mndu'))}")
 
     print('***** Matches *****')
-    match_simple: MatchSimple = api.match_simple('2022mndu_qm48')
+    match_simple = api.match_simple('2022mndu_qm48')
     print(f"Level: {match_simple.level()}")
     print(f"Set Number: {match_simple.set_number()}")
     print(f"Match Number: {match_simple.match_number()}")
