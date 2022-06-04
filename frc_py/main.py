@@ -8,86 +8,6 @@ from .cache import Cache
 
 class FRC_PY:
     @staticmethod
-    def team_key_to_number(team: str) -> int:
-        return int(team[3:])
-
-    @staticmethod
-    def event_key_to_year(event: str) -> int:
-        return int(event[:4])
-
-    @staticmethod
-    def match_key_to_year(match: str) -> int:
-        return int(match[:4])
-
-    @staticmethod
-    def match_key_to_event(match: str) -> str:
-        return match.split('_')[0]
-
-    @staticmethod
-    def event_type_to_str(event_type: int) -> str:
-        match(event_type):
-            case 0:
-                return 'Regional'
-            case 1:
-                return 'District'
-            case 2:
-                return 'District Championship'
-            case 3:
-                return 'Championship Division'
-            case 4:
-                return 'Einstein'
-            case 5:
-                return 'District Championship Division'
-            case 6:
-                return 'Festival of Champions'
-            case 7:
-                return 'Remote'
-            case 99:
-                return 'Offseason'
-            case 100:
-                return 'Preseason'
-            case _:
-                return 'Unknown'
-
-    @staticmethod
-    def is_event_type_district(event_type: int) -> bool:
-        return FRC_PY.event_type_to_str(event_type) in [
-            'District',
-            'District Championship',
-            'District Championship Division'
-        ]
-
-    @staticmethod
-    def is_event_type_non_championship(event_type: int) -> bool:
-        return FRC_PY.event_type_to_str(event_type) in [
-            'Regional',
-            'District',
-            'District Championship',
-            'District Championship Division',
-            'Remote'
-        ]
-
-    @staticmethod
-    def is_event_type_championship(event_type: int) -> bool:
-        return FRC_PY.event_type_to_str(event_type) in [
-            'Championship Division',
-            'Einstein'
-        ]
-
-    @staticmethod
-    def is_event_type_season(event_type: int) -> bool:
-        return FRC_PY.event_type_to_str(event_type) in [
-            'Regional',
-            'District',
-            'District Championship',
-            'District Championship Division',
-            'Championship Division',
-            'Einstein',
-            'Festival of Champions',
-            'Remote'
-        ]
-
-    @staticmethod
     def __validate_winner(winner: str, red_score: int, blue_score: int) -> str:
         if winner == 'red':
             if red_score < blue_score:
@@ -217,36 +137,33 @@ class FRC_PY:
         return event
 
     def get_event_teams(self, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
-        year = FRC_PY.event_key_to_year(event)
-        if cached and self.__cache.is_cached(['events', str(year), event], 'teams_tba'):
-            teams = self.__cache.get(['events', str(year), event], 'teams_tba', cache_expiry)
+        if cached and self.__cache.is_cached(['events', event], 'teams_tba'):
+            teams = self.__cache.get(['events', event], 'teams_tba', cache_expiry)
             if teams is not None:
                 return teams
         teams = self.__tba_client.event_teams(event, keys=True)
         if cached:
-            self.__cache.save(['events', str(year), event], 'teams_tba', teams)
+            self.__cache.save(['events', event], 'teams_tba', teams)
         return teams
 
     def get_event_matches(self, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
-        year = FRC_PY.event_key_to_year(event)
-        if cached and self.__cache.is_cached(['events', str(year), event], 'matches_tba'):
-            matches = self.__cache.get(['events', str(year), event], 'matches_tba', cache_expiry)
+        if cached and self.__cache.is_cached(['events', event], 'matches_tba'):
+            matches = self.__cache.get(['events', event], 'matches_tba', cache_expiry)
             if matches is not None:
                 return matches
         matches = self.__tba_client.event_matches(event, keys=True)
         if cached:
-            self.__cache.save(['events', str(year), event], 'matches_tba', matches)
+            self.__cache.save(['events', event], 'matches_tba', matches)
         return matches
 
     def get_team_event_matches(self, team: str, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
-        year = FRC_PY.event_key_to_year(event)
-        if cached and self.__cache.is_cached(['teams', team, str(year), event], 'matches_tba'):
-            matches = self.__cache.get(['teams', team, str(year), event], 'matches_tba', cache_expiry)
+        if cached and self.__cache.is_cached(['teams', team, event], 'matches_tba'):
+            matches = self.__cache.get(['teams', team, event], 'matches_tba', cache_expiry)
             if matches is not None:
                 return matches
         matches = self.__tba_client.team_matches(team, event, keys=True)
         if cached:
-            self.__cache.save(['teams', team, str(year), event], 'matches_tba', matches)
+            self.__cache.save(['teams', team, event], 'matches_tba', matches)
         return matches
 
     def match_simple(self, key: str, cached: bool = True, cache_expiry: int = 90) -> MatchSimple:

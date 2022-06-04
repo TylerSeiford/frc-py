@@ -29,7 +29,7 @@ if __name__ == '__main__':
     event_simple = api.event_simple('2022mndu')
     print(f"Name: {event_simple.name()}")
     print(f"Location: {event_simple.location()}")
-    print(f"Type: {FRC_PY.event_type_to_str(event_simple.event_type())}")
+    print(f"Type: {event_simple.event_type_str()}")
     print(f"Dates: {event_simple.dates()}")
     print(f"District: {event_simple.district_key()}")
     print(f"Teams: {len(api.get_event_teams('2022mndu'))}")

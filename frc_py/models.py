@@ -23,6 +23,11 @@ class Location:
 
 
 class Team:
+    @staticmethod
+    def team_key_to_number(team_key: str) -> int:
+        return int(team_key[3:])
+
+
     def __init__(self, key: str, nickname: str, name: str, location: Location,
             school_name: str, website: str, rookie_year: str, motto: str):
         self.__key = key
@@ -59,7 +64,12 @@ class Team:
         return self.__motto
 
 
-class EventSimple:
+class EventSimple: # TODO: Convert to full event
+    @staticmethod
+    def event_key_to_year(event_key: str) -> int:
+        return int(event_key[:4])
+
+
     def __init__(self, key: str, name: str, location: Location, event_type: int, dates: tuple[str, str],
             district_key: str):
         self.__key = key
@@ -80,6 +90,65 @@ class EventSimple:
 
     def event_type(self) -> int:
         return self.__type
+
+    def event_type_str(self) -> str:
+        match(self.__type):
+            case 0:
+                return 'Regional'
+            case 1:
+                return 'District'
+            case 2:
+                return 'District Championship'
+            case 3:
+                return 'Championship Division'
+            case 4:
+                return 'Einstein'
+            case 5:
+                return 'District Championship Division'
+            case 6:
+                return 'Festival of Champions'
+            case 7:
+                return 'Remote'
+            case 99:
+                return 'Offseason'
+            case 100:
+                return 'Preseason'
+            case _:
+                return 'Unknown'
+
+    def is_district_event(self) -> bool:
+        return self.event_type_str() in {
+            'District',
+            'District Championship',
+            'District Championship Division'
+        }
+
+    def is_non_championship_event(self) -> bool:
+        return self.event_type_str() in {
+            'Regional',
+            'District',
+            'District Championship',
+            'District Championship Division',
+            'Remote'
+        }
+
+    def is_championship_event(self) -> bool:
+        return self.event_type_str() in {
+            'Championship Division',
+            'Einstein'
+        }
+
+    def is_season_event(self) -> bool:
+        return self.event_type_str() in {
+            'Regional',
+            'District',
+            'District Championship',
+            'District Championship Division',
+            'Championship Division',
+            'Einstein',
+            'Festival of Champions',
+            'Remote'
+        }
 
     def dates(self) -> tuple[str, str]:
         return self.__dates
@@ -114,7 +183,16 @@ class MatchAlliance:
         })
 
 
-class MatchSimple:
+class MatchSimple: # Todo: Convert to full match
+    @staticmethod
+    def match_key_to_year(match_key: str) -> int:
+        return int(match_key[:4])
+
+    @staticmethod
+    def match_key_to_event(match_key: str) -> str:
+        return match_key.split('_')[0]
+
+
     def __init__(self, key: str, level: str, set_number: int, match_number: int,
             red_score: int, blue_score: int,
             red_teams: MatchAlliance, blue_teams: MatchAlliance,
