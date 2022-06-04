@@ -22,29 +22,13 @@ class Location:
         return f"{self.__city}, {self.__state_prov}, {self.__country}"
 
 
-class TeamSimple:
-    def __init__(self, key: str, nickname: str, name: str, location: Location):
+class Team:
+    def __init__(self, key: str, nickname: str, name: str, location: Location,
+            school_name: str, website: str, rookie_year: str, motto: str):
         self.__key = key
         self.__nickname = nickname
         self.__name = name
         self.__location = location
-
-    def get_key(self) -> str:
-        return self.__key
-
-    def get_nickname(self) -> str:
-        return self.__nickname
-
-    def get_name(self) -> str:
-        return self.__name
-
-    def get_location(self) -> Location:
-        return self.__location
-
-
-class Team:
-    def __init__(self, key: str, school_name: str, website: str, rookie_year: str, motto: str):
-        self.__key = key
         self.__school_name = school_name
         self.__website = website
         self.__rookie_year = rookie_year
@@ -52,6 +36,15 @@ class Team:
 
     def key(self) -> str:
         return self.__key
+
+    def nickname(self) -> str:
+        return self.__nickname
+
+    def name(self) -> str:
+        return self.__name
+
+    def location(self) -> Location:
+        return self.__location
 
     def school_name(self) -> str:
         return self.__school_name

@@ -1,7 +1,7 @@
 from datetime import datetime
 import tbapy
 import statbotics
-from .models import EventSimple, Location, TeamSimple, Team, MatchAlliance, MatchSimple
+from .models import EventSimple, Location, Team, MatchAlliance, MatchSimple
 from .cache import Cache
 
 
@@ -156,22 +156,6 @@ class FRC_PY:
             self.__cache.save(['teams', team], 'participation_tba', participation)
         return participation
 
-    def team_simple(self, key: str, cached: bool = True, cache_expiry: int = 90) -> TeamSimple:
-        if cached:
-            team = self.__cache.get_team_simple(key, cache_expiry)
-            if team is not None:
-                return team
-        simple = self.__tba_client.team(key, simple=True)
-        team = TeamSimple(
-            key,
-            simple.nickname,
-            simple.name,
-            Location(simple.city, simple.state_prov, simple.country)
-        )
-        if cached:
-            self.__cache.save_team_simple(team)
-        return team
-
     def team(self, key: str, cached: bool = True, cache_expiry: int = 90) -> Team:
         if cached:
             team = self.__cache.get_team(key, cache_expiry)
@@ -180,6 +164,9 @@ class FRC_PY:
         api_data = self.__tba_client.team(key)
         team = Team(
             key,
+            api_data.nickname,
+            api_data.name,
+            Location(api_data.city, api_data.state_prov, api_data.country),
             api_data.school_name,
             api_data.website,
             api_data.rookie_year,

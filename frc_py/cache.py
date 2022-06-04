@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import os
 import sqlite3
 import json
-from .models import Location, TeamSimple, Team, EventSimple, MatchAlliance, MatchSimple
+from .models import Location, Team, EventSimple, MatchAlliance, MatchSimple
 
 
 
@@ -11,80 +11,48 @@ class Cache:
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
         self.__connection = sqlite3.connect(os.path.join(cache_dir, 'cache.db'))
-        self.__init_team_simple()
         self.__init_team()
         self.__init_event_simple()
         self.__init_match_simple()
 
 
-    def __init_team_simple(self) -> None:
-        self.__connection.execute('''CREATE TABLE IF NOT EXISTS team_simple (
+    def __init_team(self) -> None:
+        self.__connection.execute('''CREATE TABLE IF NOT EXISTS teams (
             last_updated datetime,
             key text, nickname text, name text,
-            city text, state_prov text, country text
-        )''')
-        self.__connection.commit()
-
-    def save_team_simple(self, team: TeamSimple) -> None:
-        location = team.get_location()
-        self.__connection.execute('INSERT INTO team_simple VALUES (?, ?, ?, ?, ?, ?, ?)', (
-            datetime.utcnow().isoformat(),
-            team.get_key(), team.get_nickname(), team.get_name(),
-            location.city(), location.state_prov(), location.country()
-        ))
-        self.__connection.commit()
-
-    def get_team_simple(self, team_key: str, cache_expiry) -> TeamSimple | None:
-        cursor = self.__connection.cursor()
-        cursor.execute('SELECT * FROM team_simple WHERE key = ?', [team_key])
-        result = cursor.fetchone()
-        cursor.close()
-        if result is None:
-            return None
-        timestamp, key, nickname, name, city, state_prov, country = result
-        timestamp = datetime.fromisoformat(timestamp)
-        if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
-            self._delete_team_simple(team_key)
-            return None
-        return TeamSimple(key, nickname, name, Location(city, state_prov, country))
-
-    def _delete_team_simple(self, team_key: str) -> None:
-        self.__connection.execute('DELETE FROM team_simple WHERE key = ?', team_key)
-        self.__connection.commit()
-
-
-    def __init_team(self) -> None:
-        self.__connection.execute('''CREATE TABLE IF NOT EXISTS team (
-            last_updated datetime,
-            key text, school_name text, website text,
+            city text, state_prov text, country text,
+            school_name text, website text,
             rookie_year text, motto text
         )''')
         self.__connection.commit()
 
     def save_team(self, team: Team) -> None:
-        self.__connection.execute('INSERT INTO team VALUES (?, ?, ?, ?, ?, ?)', (
+        location = team.location()
+        self.__connection.execute('INSERT INTO teams VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
             datetime.utcnow().isoformat(),
-            team.key(), team.school_name(), team.website(),
+            team.key(), team.nickname(), team.name(),
+            location.city(), location.state_prov(), location.country(),
+            team.school_name(), team.website(),
             team.rookie_year(), team.motto()
         ))
         self.__connection.commit()
 
     def get_team(self, team_key: str, cache_expiry) -> Team | None:
         cursor = self.__connection.cursor()
-        cursor.execute('SELECT * FROM team WHERE key = ?', [team_key])
+        cursor.execute('SELECT * FROM teams WHERE key = ?', [team_key])
         result = cursor.fetchone()
         cursor.close()
         if result is None:
             return None
-        timestamp, key, school_name, website, rookie_year, motto = result
+        timestamp, key, nickname, name, city, state_prov, country, school_name, website, rookie_year, motto = result
         timestamp = datetime.fromisoformat(timestamp)
         if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
             self._delete_team(team_key)
             return None
-        return Team(key, school_name, website, rookie_year, motto)
+        return Team(key, nickname, name, Location(city, state_prov, country), school_name, website, rookie_year, motto)
 
     def _delete_team(self, team_key: str) -> None:
-        self.__connection.execute('DELETE FROM team WHERE key = ?', [team_key])
+        self.__connection.execute('DELETE FROM teams WHERE key = ?', [team_key])
         self.__connection.commit()
 
 
