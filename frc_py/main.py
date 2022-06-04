@@ -1,8 +1,10 @@
-from datetime import date, datetime
+from datetime import datetime
 import tbapy
 import statbotics
-from .models import EventSimple, TeamSimple, Team, MatchSimple
+from .models import EventSimple, Location, TeamSimple, Team, MatchAlliance, MatchSimple
 from .cache import Cache
+
+
 
 class FRC_PY:
     @staticmethod
@@ -154,7 +156,7 @@ class FRC_PY:
             self.__cache.save(['teams', team], 'participation_tba', participation)
         return participation
 
-    def __team_simple(self, key: str, cached: bool = True, cache_expiry: int = 90) -> TeamSimple:
+    def team_simple(self, key: str, cached: bool = True, cache_expiry: int = 90) -> TeamSimple:
         if cached:
             team = self.__cache.get_team_simple(key, cache_expiry)
             if team is not None:
@@ -164,22 +166,13 @@ class FRC_PY:
             key,
             simple.nickname,
             simple.name,
-            (simple.city, simple.state_prov, simple.country)
+            Location(simple.city, simple.state_prov, simple.country)
         )
         if cached:
             self.__cache.save_team_simple(team)
         return team
 
-    def get_team_location(self, team: str, cached: bool = True, cache_expiry: int = 90) -> tuple[str, str, str]:
-        return self.__team_simple(team, cached, cache_expiry).get_location()
-
-    def get_team_nickname(self, team: str, cached: bool = True, cache_expiry: int = 90) -> str:
-        return self.__team_simple(team, cached, cache_expiry).get_nickname()
-
-    def get_team_name(self, team: str, cached: bool = True, cache_expiry: int = 90) -> str:
-        return self.__team_simple(team, cached, cache_expiry).get_name()
-
-    def __team(self, key: str, cached: bool = True, cache_expiry: int = 90) -> Team:
+    def team(self, key: str, cached: bool = True, cache_expiry: int = 90) -> Team:
         if cached:
             team = self.__cache.get_team(key, cache_expiry)
             if team is not None:
@@ -195,18 +188,6 @@ class FRC_PY:
         if cached:
             self.__cache.save_team(team)
         return team
-
-    def get_team_school(self, team: str, cached: bool = True, cache_expiry: int = 90) -> str:
-        return self.__team(team, cached, cache_expiry).get_school_name()
-
-    def get_team_website(self, team: str, cached: bool = True, cache_expiry: int = 90) -> str:
-        return self.__team(team, cached, cache_expiry).get_website()
-
-    def get_team_rookie_year(self, team: str, cached: bool = True, cache_expiry: int = 90) -> int:
-        return self.__team(team, cached, cache_expiry).get_rookie_year()
-
-    def get_team_motto(self, team: str, cached: bool = True, cache_expiry: int = 90) -> str:
-        return self.__team(team, cached, cache_expiry).get_motto()
 
     def get_team_events_year(self, team: str, year: int, cached: bool = True, cache_expiry: int = 90) -> list[str]:
         if cached and self.__cache.is_cached(['teams', team, str(year)], 'events_tba'):
@@ -228,7 +209,7 @@ class FRC_PY:
             self.__cache.save(['events', str(year)], 'events_tba', events)
         return events
 
-    def __event_simple(self, key: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
+    def event_simple(self, key: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
         if cached:
             event = self.__cache.get_event_simple(key, cache_expiry)
             if event is not None:
@@ -239,7 +220,7 @@ class FRC_PY:
             district = district['key']
         event = EventSimple(
             key, event.name,
-            (event.city, event.state_prov, event.country),
+            Location(event.city, event.state_prov, event.country),
             event.event_type,
             (event.start_date, event.end_date),
             district
@@ -247,22 +228,6 @@ class FRC_PY:
         if cached:
             self.__cache.save_event_simple(event)
         return event
-
-    def get_event_name(self, event: str, cached: bool = True, cache_expiry: int = 90) -> str:
-        return self.__event_simple(event, cached, cache_expiry).get_name()
-
-    def get_event_location(self, event: str, cached: bool = True, cache_expiry: int = 90) -> tuple[str, str, str]:
-        return self.__event_simple(event, cached, cache_expiry).get_location()
-
-    def get_event_type(self, event: str, cached: bool = True, cache_expiry: int = 90) -> str:
-        return self.__event_simple(event, cached, cache_expiry).get_type()
-
-    def get_event_dates(self, event: str, cached: bool = True, cache_expiry: int = 90) -> tuple[str, str]:
-        start, end = self.__event_simple(event, cached, cache_expiry).get_dates()
-        return date.fromisoformat(start), date.fromisoformat(end)
-
-    def get_event_district(self, event: str, cached: bool = True, cache_expiry: int = 90) -> str:
-        return self.__event_simple(event, cached, cache_expiry).get_district_key()
 
     def get_event_teams(self, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
         year = FRC_PY.event_key_to_year(event)
@@ -297,7 +262,7 @@ class FRC_PY:
             self.__cache.save(['teams', team, str(year), event], 'matches_tba', matches)
         return matches
 
-    def __match_simple(self, key: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
+    def match_simple(self, key: str, cached: bool = True, cache_expiry: int = 90) -> dict[str, any]:
         if cached:
             simple = self.__cache.get_match_simple(key, cache_expiry)
             if simple is not None:
@@ -309,15 +274,16 @@ class FRC_PY:
         match = MatchSimple(
             key, simple.comp_level, simple.set_number, simple.match_number,
             red_score, blue_score,
-            {
-                'team_keys': simple.alliances['red']['team_keys'],
-                'dq': simple.alliances['red']['dq_team_keys'],
-                'surrogate': simple.alliances['red']['surrogate_team_keys']
-            }, {
-                'team_keys': simple.alliances['blue']['team_keys'],
-                'dq': simple.alliances['blue']['dq_team_keys'],
-                'surrogate': simple.alliances['blue']['surrogate_team_keys']
-            },
+            MatchAlliance(
+                simple.alliances['red']['team_keys'],
+                simple.alliances['red']['dq_team_keys'],
+                simple.alliances['red']['surrogate_team_keys']
+            ),
+            MatchAlliance(
+                simple.alliances['blue']['team_keys'],
+                simple.alliances['blue']['dq_team_keys'],
+                simple.alliances['blue']['surrogate_team_keys']
+            ),
             winner,
             datetime.fromtimestamp(simple.time),
             datetime.fromtimestamp(simple.predicted_time),
@@ -326,30 +292,3 @@ class FRC_PY:
         if cached:
             self.__cache.save_match_simple(match)
         return match
-
-    def get_match_level(self, match: str, cached: bool = True, cache_expiry: int = 90) -> str:
-        return self.__match_simple(match, cached, cache_expiry).get_level()
-
-    def get_match_set_number(self, match: str, cached: bool = True, cache_expiry: int = 90) -> int:
-        return self.__match_simple(match, cached, cache_expiry).get_set_number()
-
-    def get_match_number(self, match: str, cached: bool = True, cache_expiry: int = 90) -> int:
-        return self.__match_simple(match, cached, cache_expiry).get_match_number()
-
-    def get_match_winner(self, match: str, cached: bool = True, cache_expiry: int = 90) -> str:
-        return self.__match_simple(match, cached, cache_expiry).get_winner()
-
-    def get_match_red_score(self, match: str, cached: bool = True, cache_expiry: int = 90) -> int:
-        return self.__match_simple(match, cached, cache_expiry).get_red_score()
-
-    def get_match_blue_score(self, match: str, cached: bool = True, cache_expiry: int = 90) -> int:
-        return self.__match_simple(match, cached, cache_expiry).get_blue_score()
-
-    def get_match_red_teams(self, match: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
-        return self.__match_simple(match, cached, cache_expiry).get_red_teams()['team_keys']
-
-    def get_match_blue_teams(self, match: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
-        return self.__match_simple(match, cached, cache_expiry).get_blue_teams()['team_keys']
-
-    def get_match_time(self, match: str, cached: bool = True, cache_expiry: int = 90) -> datetime:
-        return self.__match_simple(match, cached, cache_expiry).get_actual_time()
