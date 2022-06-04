@@ -482,9 +482,10 @@ class Cache:
         red_teams = MatchAlliance(red_teams['teams'], red_teams['dq'], red_teams['surrogate'])
         blue_teams = json.loads(blue_teams)
         blue_teams = MatchAlliance(blue_teams['teams'], blue_teams['dq'], blue_teams['surrogate'])
-        json.loads(raw_videos)
+        raw_videos = json.loads(raw_videos)
         videos = []
         for video in raw_videos:
+            video = json.loads(video)
             videos.append(MatchVideo(video['key'], video['type']))
         return Match(key, level, set_number, match_number,
                 red_score, blue_score,
