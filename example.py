@@ -1,11 +1,14 @@
+'''
+Example on how to use the library.
+'''
 import os
-from frc_py import FRC_PY
+from frc_py import FRCPy
 
 
 
 if __name__ == '__main__':
     TOKEN = os.environ['SECRET_TBA_TOKEN'] # Replace with your TBA token
-    with FRC_PY(TOKEN) as api:
+    with FRCPy(TOKEN) as api:
         print('***** Teams *****')
         teams: list[str] = api.get_teams()
         print(f"Found {len(teams)} teams")

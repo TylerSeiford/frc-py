@@ -1,3 +1,6 @@
+'''
+Cache for the FRCPy class
+'''
 from datetime import datetime, timedelta
 import os
 import sqlite3
@@ -7,6 +10,9 @@ from .models import Location, Team, Webcast, Event, MatchAlliance, MatchSimple
 
 
 class Cache:
+    '''
+    Class to cache data
+    '''
     def __init__(self, cache_dir: str = './cache'):
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
@@ -37,6 +43,7 @@ class Cache:
         self.__connection.commit()
 
     def save_team_index(self, teams: list[str]) -> None:
+        '''Save the team index'''
         self.__connection.execute('INSERT INTO team_index VALUES (?, ?)', (
             datetime.utcnow().isoformat(),
             json.dumps(teams)
@@ -44,6 +51,7 @@ class Cache:
         self.__connection.commit()
 
     def get_team_index(self, cache_expiry: int) -> list[str] | None:
+        '''Get the team index'''
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM team_index')
         result = cursor.fetchone()
@@ -72,6 +80,7 @@ class Cache:
         self.__connection.commit()
 
     def save_team(self, team: Team) -> None:
+        '''Save a team'''
         location = team.location()
         self.__connection.execute('INSERT INTO teams VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
             datetime.utcnow().isoformat(),
@@ -83,6 +92,7 @@ class Cache:
         self.__connection.commit()
 
     def get_team(self, team_key: str, cache_expiry: int) -> Team | None:
+        '''Get a team'''
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM teams WHERE key = ?', [team_key])
         result = cursor.fetchone()
@@ -119,6 +129,7 @@ class Cache:
         self.__connection.commit()
 
     def save_team_years(self, team_key: str, years: list[int]) -> None:
+        '''Save the years a team has participated in'''
         self.__connection.execute('INSERT INTO team_years VALUES (?, ?, ?)', (
             datetime.utcnow().isoformat(),
             team_key, json.dumps(years)
@@ -126,6 +137,7 @@ class Cache:
         self.__connection.commit()
 
     def get_team_years(self, team_key: str, cache_expiry: int) -> list[int] | None:
+        '''Get the years a team has participated in'''
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM team_years WHERE key = ?', [team_key])
         result = cursor.fetchone()
@@ -152,6 +164,7 @@ class Cache:
         self.__connection.commit()
 
     def save_team_year_events(self, team_key: str, year: int, events: list[str]) -> None:
+        '''Save the events a team has participated in for a given year'''
         self.__connection.execute('INSERT INTO team_year_events VALUES (?, ?, ?, ?)', (
             datetime.utcnow().isoformat(),
             team_key, year, json.dumps(events)
@@ -159,6 +172,7 @@ class Cache:
         self.__connection.commit()
 
     def get_team_year_events(self, team_key: str, year: int, cache_expiry: int) -> list[str] | None:
+        '''Get the events a team has participated in for a given year'''
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM team_year_events WHERE key = ? AND year = ?',
                 [team_key, year])
@@ -187,6 +201,7 @@ class Cache:
         self.__connection.commit()
 
     def save_year_events(self, year: int, events: list[str]) -> None:
+        '''Save the events for a given year'''
         self.__connection.execute('INSERT INTO year_events VALUES (?, ?, ?)', (
             datetime.utcnow().isoformat(),
             year, json.dumps(events)
@@ -194,6 +209,7 @@ class Cache:
         self.__connection.commit()
 
     def get_year_events(self, year: int, cache_expiry: int) -> list[str] | None:
+        '''Get the events for a given year'''
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM year_events WHERE year = ?', [year])
         result = cursor.fetchone()
@@ -229,6 +245,7 @@ class Cache:
         self.__connection.commit()
 
     def save_event(self, event: Event) -> None:
+        '''Save an event'''
         location = event.location()
         start, end = event.dates()
         webcasts = []
@@ -252,6 +269,7 @@ class Cache:
         self.__connection.commit()
 
     def get_event(self, event_key: str, cache_expiry: int) -> Event | None:
+        '''Get an event'''
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM events WHERE key = ?', [event_key])
         result = cursor.fetchone()
@@ -307,6 +325,7 @@ class Cache:
         self.__connection.commit()
 
     def save_event_teams(self, event_key: str, teams: list[str]) -> None:
+        '''Save the teams for an event'''
         self.__connection.execute('INSERT INTO event_teams VALUES (?, ?, ?)', (
             datetime.utcnow().isoformat(),
             event_key, json.dumps(teams)
@@ -314,6 +333,7 @@ class Cache:
         self.__connection.commit()
 
     def get_event_teams(self, event_key: str, cache_expiry: int) -> list[str] | None:
+        '''Get the teams for an event'''
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM event_teams WHERE event = ?', [event_key])
         result = cursor.fetchone()
@@ -340,6 +360,7 @@ class Cache:
         self.__connection.commit()
 
     def save_event_matches(self, event_key: str, matches: list[str]) -> None:
+        '''Save the matches for an event'''
         self.__connection.execute('INSERT INTO event_matches VALUES (?, ?, ?)', (
             datetime.utcnow().isoformat(),
             event_key, json.dumps(matches)
@@ -347,6 +368,7 @@ class Cache:
         self.__connection.commit()
 
     def get_event_matches(self, event_key: str, cache_expiry: int) -> list[str] | None:
+        '''Get the matches for an event'''
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM event_matches WHERE event = ?', [event_key])
         result = cursor.fetchone()
@@ -373,6 +395,7 @@ class Cache:
         self.__connection.commit()
 
     def save_team_event_matches(self, team_key: str, event_key: str, matches: list[str]) -> None:
+        '''Save the matches for a team at an event'''
         self.__connection.execute('INSERT INTO team_event_matches VALUES (?, ?, ?, ?)', (
             datetime.utcnow().isoformat(),
             team_key, event_key, json.dumps(matches)
@@ -381,6 +404,7 @@ class Cache:
 
     def get_team_event_matches(self, team_key: str, event_key: str,
             cache_expiry: int) -> list[str] | None:
+        '''Get the matches for a team at an event'''
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM team_event_matches WHERE team = ? AND event = ?',
                 [team_key, event_key])
@@ -414,6 +438,7 @@ class Cache:
         self.__connection.commit()
 
     def save_match_simple(self, match: MatchSimple) -> None:
+        '''Save a match'''
         self.__connection.execute('INSERT INTO match_simple VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '
                 '?, ?, ?, ?, ?, ?)', (
             datetime.utcnow().isoformat(),
@@ -429,6 +454,7 @@ class Cache:
         self.__connection.commit()
 
     def get_match_simple(self, match_key: str, cache_expiry: int) -> MatchSimple | None:
+        '''Get a match'''
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM match_simple WHERE key = ?', [match_key])
         result = cursor.fetchone()

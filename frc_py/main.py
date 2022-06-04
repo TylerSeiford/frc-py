@@ -1,3 +1,6 @@
+'''
+Interact with the TBA and Statbotics APIs
+'''
 from datetime import datetime
 import tbapy
 import statbotics
@@ -6,7 +9,10 @@ from .cache import Cache
 
 
 
-class FRC_PY:
+class FRCPy:
+    '''
+    Class to interact with the TBA and Statbotics APIs
+    '''
     @staticmethod
     def __validate_winner(winner: str, red_score: int, blue_score: int) -> str:
         if winner == 'red':
@@ -53,10 +59,12 @@ class FRC_PY:
 
 
     def year_range(self) -> tuple[int, int]:
+        '''Get the year range of events'''
         status = self.__tba_client.status()
         return (1992, status['max_season'])
 
     def get_teams(self, cached: bool = True, cache_expiry: int = 90) -> list:
+        '''Get all teams'''
         if cached:
             teams = self.__cache.get_team_index(cache_expiry)
             if teams is not None:
@@ -75,6 +83,7 @@ class FRC_PY:
         return teams
 
     def team_years(self, team: str, cached: bool = True, cache_expiry: int = 90) -> list[int]:
+        '''Get the years the team has participated in'''
         if cached:
             participation = self.__cache.get_team_years(team, cache_expiry)
             if participation is not None:
@@ -85,6 +94,7 @@ class FRC_PY:
         return participation
 
     def team(self, key: str, cached: bool = True, cache_expiry: int = 90) -> Team:
+        '''Get a team'''
         if cached:
             team = self.__cache.get_team(key, cache_expiry)
             if team is not None:
@@ -106,6 +116,7 @@ class FRC_PY:
 
     def team_year_events(self, team: str, year: int, cached: bool = True,
             cache_expiry: int = 90) -> list[str]:
+        '''Get the events a team has participated in in a year'''
         if cached:
             events = self.__cache.get_team_year_events(team, year, cache_expiry)
             if events is not None:
@@ -116,6 +127,7 @@ class FRC_PY:
         return events
 
     def year_events(self, year: int, cached: bool = True, cache_expiry: int = 90) -> list[str]:
+        '''Get all the events in a year'''
         if cached:
             events = self.__cache.get_year_events(year, cache_expiry)
             if events is not None:
@@ -126,6 +138,7 @@ class FRC_PY:
         return events
 
     def event(self, key: str, cached: bool = True, cache_expiry: int = 90) -> Event:
+        '''Get an event'''
         if cached:
             event = self.__cache.get_event(key, cache_expiry)
             if event is not None:
@@ -158,6 +171,7 @@ class FRC_PY:
         return event
 
     def event_teams(self, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
+        '''Get the teams that have participated in an event'''
         if cached:
             teams = self.__cache.get_event_teams(event, cache_expiry)
             if teams is not None:
@@ -168,6 +182,7 @@ class FRC_PY:
         return teams
 
     def event_matches(self, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
+        '''Get the matches in an event'''
         if cached:
             matches = self.__cache.get_event_matches(event, cache_expiry)
             if matches is not None:
@@ -179,6 +194,7 @@ class FRC_PY:
 
     def team_event_matches(self, team: str, event: str, cached: bool = True,
             cache_expiry: int = 90) -> list[str]:
+        '''Get the matches a team has participated in an event'''
         if cached:
             matches = self.__cache.get_team_event_matches(team, event, cache_expiry)
             if matches is not None:
@@ -189,6 +205,7 @@ class FRC_PY:
         return matches
 
     def match_simple(self, key: str, cached: bool = True, cache_expiry: int = 90) -> MatchSimple:
+        '''Get a match'''
         if cached:
             simple = self.__cache.get_match_simple(key, cache_expiry)
             if simple is not None:
@@ -196,7 +213,7 @@ class FRC_PY:
         simple = self.__tba_client.match(key, simple=True)
         red_score = simple.alliances['red']['score']
         blue_score = simple.alliances['blue']['score']
-        winner = FRC_PY.__validate_winner(simple.winning_alliance, red_score, blue_score)
+        winner = FRCPy.__validate_winner(simple.winning_alliance, red_score, blue_score)
         match = MatchSimple(
             key, simple.comp_level, simple.set_number, simple.match_number,
             red_score, blue_score,

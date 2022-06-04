@@ -1,2 +1,5 @@
-from .main import FRC_PY
+'''
+Interact with the TBA and Statbotics APIs
+'''
+from .main import FRCPy
 from .models import *
