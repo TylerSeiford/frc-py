@@ -10,7 +10,7 @@ if __name__ == '__main__':
     print('***** Teams *****')
     teams: list[str] = api.get_teams()
     print(f"Found {len(teams)} teams")
-    print(f"Years: {api.get_team_participation('frc2501')}")
+    print(f"Years: {api.team_years('frc2501')}")
     team = api.team('frc2501')
     print(f"Location: {team.location()}")
     print(f"Nickname: {team.nickname()}")
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     print(f"Website: {team.website()}")
     print(f"Rookie Year: {team.rookie_year()}")
     print(f"Motto: {team.motto()}")
-    for year in api.get_team_participation('frc2501'):
+    for year in api.team_years('frc2501'):
         print(f"{year}: {api.get_team_events_year('frc2501', year)}")
 
     print('***** Events *****')

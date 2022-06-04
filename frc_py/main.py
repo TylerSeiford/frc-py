@@ -66,14 +66,14 @@ class FRC_PY:
             self.__cache.save(['teams'], 'index_tba', teams)
         return teams
 
-    def get_team_participation(self, team: str, cached: bool = True, cache_expiry: int = 90) -> list[int]:
-        if cached and self.__cache.is_cached(['teams', team], 'participation_tba'):
-            participation = self.__cache.get(['teams', team], 'participation_tba', cache_expiry)
+    def team_years(self, team: str, cached: bool = True, cache_expiry: int = 90) -> list[int]:
+        if cached:
+            participation = self.__cache.get_team_years(team, cache_expiry)
             if participation is not None:
                 return participation
         participation = self.__tba_client.team_years(team)
         if cached:
-            self.__cache.save(['teams', team], 'participation_tba', participation)
+            self.__cache.save_team_years(team, participation)
         return participation
 
     def team(self, key: str, cached: bool = True, cache_expiry: int = 90) -> Team:

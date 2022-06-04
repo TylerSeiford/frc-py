@@ -12,6 +12,7 @@ class Cache:
             os.mkdir(cache_dir)
         self.__connection = sqlite3.connect(os.path.join(cache_dir, 'cache.db'))
         self.__init_teams()
+        self.__init_team_years()
         self.__init_events()
         self.__init_match_simple()
 
@@ -37,7 +38,7 @@ class Cache:
         ))
         self.__connection.commit()
 
-    def get_team(self, team_key: str, cache_expiry) -> Team | None:
+    def get_team(self, team_key: str, cache_expiry: int) -> Team | None:
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM teams WHERE key = ?', [team_key])
         result = cursor.fetchone()
@@ -53,6 +54,39 @@ class Cache:
 
     def _delete_team(self, team_key: str) -> None:
         self.__connection.execute('DELETE FROM teams WHERE key = ?', [team_key])
+        self.__connection.commit()
+
+
+    def __init_team_years(self) -> None:
+        self.__connection.execute('''CREATE TABLE IF NOT EXISTS team_years (
+            last_updated datetime,
+            key text, years text
+        )''')
+        self.__connection.commit()
+
+    def save_team_years(self, team_key: str, years: list[int]) -> None:
+        self.__connection.execute('INSERT INTO team_years VALUES (?, ?, ?)', (
+            datetime.utcnow().isoformat(),
+            team_key, json.dumps(years)
+        ))
+        self.__connection.commit()
+
+    def get_team_years(self, team_key: str, cache_expiry: int) -> list[int] | None:
+        cursor = self.__connection.cursor()
+        cursor.execute('SELECT * FROM team_years WHERE key = ?', [team_key])
+        result = cursor.fetchone()
+        cursor.close()
+        if result is None:
+            return None
+        timestamp, key, years = result
+        timestamp = datetime.fromisoformat(timestamp)
+        if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
+            self._delete_team_years(team_key)
+            return None
+        return json.loads(years)
+
+    def _delete_team_years(self, team_key: str) -> None:
+        self.__connection.execute('DELETE FROM team_years WHERE key = ?', [team_key])
         self.__connection.commit()
 
 
@@ -93,7 +127,7 @@ class Cache:
         ))
         self.__connection.commit()
 
-    def get_event(self, event_key: str, cache_expiry) -> Event | None:
+    def get_event(self, event_key: str, cache_expiry: int) -> Event | None:
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM events WHERE key = ?', [event_key])
         result = cursor.fetchone()
@@ -164,7 +198,7 @@ class Cache:
         ))
         self.__connection.commit()
 
-    def get_match_simple(self, match_key: str, cache_expiry) -> MatchSimple | None:
+    def get_match_simple(self, match_key: str, cache_expiry: int) -> MatchSimple | None:
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM match_simple WHERE key = ?', [match_key])
         result = cursor.fetchone()
