@@ -62,14 +62,19 @@ if __name__ == '__main__':
         print(f"Matches: {len(api.team_event_matches('frc2501', '2022mndu'))}")
 
         print('***** Matches *****')
-        match_simple = api.match_simple('2022mndu_qm48')
-        print(f"Level: {match_simple.level()}")
-        print(f"Set Number: {match_simple.set_number()}")
-        print(f"Match Number: {match_simple.match_number()}")
-        print(f"Winner: {match_simple.winner()}")
-        print(f"Red Score: {match_simple.red_score()}")
-        print(f"Blue Score: {match_simple.blue_score()}")
-        print(f"Red Alliance: {match_simple.red_teams()}")
-        print(f"Blue Alliance: {match_simple.blue_teams()}")
-        print(f"Time: {match_simple.schedule_time()}, {match_simple.predicted_time()}, "
-                f"{match_simple.actual_time()}")
+        match = api.match('2022mndu_qm48')
+        print(f"Level: {match.level()}")
+        print(f"Set Number: {match.set_number()}")
+        print(f"Match Number: {match.match_number()}")
+        print(f"Winner: {match.winner()}")
+        print(f"Red Score: {match.red_score()}")
+        print(f"Blue Score: {match.blue_score()}")
+        print(f"Red Alliance: {match.red_teams()}")
+        print(f"Blue Alliance: {match.blue_teams()}")
+        print(f"Time: {match.schedule_time()}, {match.predicted_time()}, "
+                f"{match.actual_time()}, {match.result_time()}")
+        # Python doesn't automatically format each object in the list as a string
+        videos = []
+        for video in match.videos():
+            videos.append(f"{video}")
+        print(f"Videos: {videos}")

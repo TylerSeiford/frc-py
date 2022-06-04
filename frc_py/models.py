@@ -29,7 +29,7 @@ class Location:
 
     def __str__(self) -> str:
         '''Returns a string representation of this location'''
-        return f"{self.__city}, {self.__state_prov}, {self.__country}"
+        return f"{self.__city, self.__state_prov, self.__country}"
 
 
 class Team:
@@ -114,7 +114,7 @@ class Webcast:
 
     def __str__(self) -> str:
         '''Returns a string representation of this webcast'''
-        return f"{self.__type} {self.__channel} {self.__date} {self.__file}"
+        return f"{self.__type, self.__channel, self.__date, self.__file}"
 
     def to_json(self) -> str:
         '''Returns a JSON representation of this webcast'''
@@ -383,7 +383,7 @@ class MatchAlliance:
 
     def __str__(self) -> str:
         '''Returns a string representation of this alliance'''
-        return f"{self.__teams}, {self.__dq}, {self.__surrogate}"
+        return f"{self.__teams, self.__dq, self.__surrogate}"
 
     def to_json(self) -> str:
         '''Returns a JSON representation of this alliance'''
@@ -394,7 +394,36 @@ class MatchAlliance:
         })
 
 
-class MatchSimple: # Todo: Convert to full match
+class MatchVideo:
+    '''
+    Represents a video of a match
+    '''
+    def __init__(self, video_type: str, key: str):
+        self.__type = video_type
+        self.__key = key
+
+    def video_type(self) -> str:
+        '''Returns the video type of this video'''
+        return self.__type
+
+    def key(self) -> str:
+        '''Returns the key of this video'''
+        return self.__key
+
+    def __str__(self) -> str:
+        '''Returns a string representation of this video'''
+        return f"{self.__type, self.__key}"
+
+    def to_json(self) -> str:
+        '''Returns a JSON representation of this video'''
+        return json.dumps({
+            'type': self.__type,
+            'key': self.__key
+        })
+
+
+
+class Match:
     '''
     Represents a match
     '''
@@ -413,7 +442,9 @@ class MatchSimple: # Todo: Convert to full match
             red_score: int, blue_score: int,
             red_teams: MatchAlliance, blue_teams: MatchAlliance,
             winner: str,
-            schedule_time: datetime, predicted_time: datetime, actual_time: datetime):
+            schedule_time: datetime, predicted_time: datetime,
+            actual_time: datetime, result_time: datetime,
+            videos = list[MatchVideo]):
         self.__key = key
         self.__level = level
         self.__set_number = set_number
@@ -426,6 +457,9 @@ class MatchSimple: # Todo: Convert to full match
         self.__schedule_time = schedule_time
         self.__predicted_time = predicted_time
         self.__actual_time = actual_time
+        self.__result_time = result_time
+        self.__videos = videos
+        # TODO: Add score breakdowns
 
     def key(self) -> str:
         '''Returns the key of this match'''
@@ -474,3 +508,11 @@ class MatchSimple: # Todo: Convert to full match
     def actual_time(self) -> datetime:
         '''Returns the actual time of this match'''
         return self.__actual_time
+
+    def result_time(self) -> datetime:
+        '''Returns the result time of this match'''
+        return self.__result_time
+
+    def videos(self) -> list[MatchVideo]:
+        '''Returns the videos of this match'''
+        return self.__videos

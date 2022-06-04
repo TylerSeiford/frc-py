@@ -4,7 +4,7 @@ Interact with the TBA and Statbotics APIs
 from datetime import datetime
 import tbapy
 import statbotics
-from .models import Location, Team, Webcast, Event, MatchAlliance, MatchSimple
+from .models import Location, Team, Webcast, Event, MatchAlliance, MatchVideo, Match
 from .cache import Cache
 
 
@@ -204,34 +204,39 @@ class FRCPy:
             self.__cache.save_team_event_matches(team, event, matches)
         return matches
 
-    def match_simple(self, key: str, cached: bool = True, cache_expiry: int = 90) -> MatchSimple:
+    def match(self, key: str, cached: bool = True, cache_expiry: int = 90) -> Match:
         '''Get a match'''
         if cached:
-            simple = self.__cache.get_match_simple(key, cache_expiry)
-            if simple is not None:
-                return simple
-        simple = self.__tba_client.match(key, simple=True)
-        red_score = simple.alliances['red']['score']
-        blue_score = simple.alliances['blue']['score']
-        winner = FRCPy.__validate_winner(simple.winning_alliance, red_score, blue_score)
-        match = MatchSimple(
-            key, simple.comp_level, simple.set_number, simple.match_number,
+            match = self.__cache.get_match(key, cache_expiry)
+            if match is not None:
+                return match
+        match = self.__tba_client.match(key)
+        red_score = match.alliances['red']['score']
+        blue_score = match.alliances['blue']['score']
+        winner = FRCPy.__validate_winner(match.winning_alliance, red_score, blue_score)
+        videos = []
+        for video in match.videos:
+            videos.append(MatchVideo(video['type'], video['key']))
+        match = Match(
+            key, match.comp_level, match.set_number, match.match_number,
             red_score, blue_score,
             MatchAlliance(
-                simple.alliances['red']['team_keys'],
-                simple.alliances['red']['dq_team_keys'],
-                simple.alliances['red']['surrogate_team_keys']
+                match.alliances['red']['team_keys'],
+                match.alliances['red']['dq_team_keys'],
+                match.alliances['red']['surrogate_team_keys']
             ),
             MatchAlliance(
-                simple.alliances['blue']['team_keys'],
-                simple.alliances['blue']['dq_team_keys'],
-                simple.alliances['blue']['surrogate_team_keys']
+                match.alliances['blue']['team_keys'],
+                match.alliances['blue']['dq_team_keys'],
+                match.alliances['blue']['surrogate_team_keys']
             ),
             winner,
-            datetime.fromtimestamp(simple.time),
-            datetime.fromtimestamp(simple.predicted_time),
-            datetime.fromtimestamp(simple.actual_time)
+            datetime.fromtimestamp(match.time),
+            datetime.fromtimestamp(match.predicted_time),
+            datetime.fromtimestamp(match.actual_time),
+            datetime.fromtimestamp(match.post_result_time),
+            videos
         )
         if cached:
-            self.__cache.save_match_simple(match)
+            self.__cache.save_match(match)
         return match

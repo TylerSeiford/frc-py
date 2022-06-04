@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import os
 import sqlite3
 import json
-from .models import Location, Team, Webcast, Event, MatchAlliance, MatchSimple
+from .models import Location, Team, Webcast, Event, MatchAlliance, MatchVideo, Match
 
 
 
@@ -26,7 +26,7 @@ class Cache:
         self.__init_event_teams()
         self.__init_event_matches()
         self.__init_team_event_matches()
-        self.__init_match_simple()
+        self.__init_match()
 
     def __enter__(self):
         return self
@@ -425,38 +425,45 @@ class Cache:
         self.__connection.commit()
 
 
-    def __init_match_simple(self) -> None:
-        self.__connection.execute('''CREATE TABLE IF NOT EXISTS match_simple (
+    def __init_match(self) -> None:
+        self.__connection.execute('''CREATE TABLE IF NOT EXISTS matches (
             last_updated datetime,
             key text, year int, event text,
             level text, set_number int, match_number int,
             red_score int, blue_score int,
             red_teams text, blue_teams text,
             winner text,
-            scheduled_time datetime, predicted_time datetime, actual_time datetime
+            scheduled_time datetime, predicted_time datetime,
+            actual_time datetime, result_time datetime,
+            videos text
         )''')
         self.__connection.commit()
 
-    def save_match_simple(self, match: MatchSimple) -> None:
+    def save_match(self, match: Match) -> None:
         '''Save a match'''
-        self.__connection.execute('INSERT INTO match_simple VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '
-                '?, ?, ?, ?, ?, ?)', (
+        videos = []
+        for video in match.videos():
+            videos.append(video.to_json())
+        self.__connection.execute('INSERT INTO matches VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '
+                '?, ?, ?, ?, ?, ?, ?, ?)', (
             datetime.utcnow().isoformat(),
             match.key(),
-            MatchSimple.match_key_to_year(match.key()),
-            MatchSimple.match_key_to_event(match.key()),
+            Match.match_key_to_year(match.key()),
+            Match.match_key_to_event(match.key()),
             match.level(), match.set_number(), match.match_number(),
             match.red_score(), match.blue_score(),
             match.red_teams().to_json(), match.blue_teams().to_json(),
             match.winner(),
-            match.schedule_time(), match.predicted_time(), match.actual_time()
+            match.schedule_time(), match.predicted_time(),
+            match.actual_time(), match.result_time(),
+            json.dumps(videos)
         ))
         self.__connection.commit()
 
-    def get_match_simple(self, match_key: str, cache_expiry: int) -> MatchSimple | None:
+    def get_match(self, match_key: str, cache_expiry: int) -> Match | None:
         '''Get a match'''
         cursor = self.__connection.cursor()
-        cursor.execute('SELECT * FROM match_simple WHERE key = ?', [match_key])
+        cursor.execute('SELECT * FROM matches WHERE key = ?', [match_key])
         result = cursor.fetchone()
         cursor.close()
         if result is None:
@@ -464,20 +471,30 @@ class Cache:
         (
             timestamp, key, _, _, level, set_number, match_number, red_score, blue_score,
             red_teams, blue_teams, winner,
-            scheduled_time, predicted_time, actual_time
+            scheduled_time, predicted_time, actual_time, result_time,
+            raw_videos
         ) = result
         timestamp = datetime.fromisoformat(timestamp)
         if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
-            self._delete_match_simple(match_key)
+            self._delete_match(match_key)
             return None
         red_teams = json.loads(red_teams)
         red_teams = MatchAlliance(red_teams['teams'], red_teams['dq'], red_teams['surrogate'])
         blue_teams = json.loads(blue_teams)
         blue_teams = MatchAlliance(blue_teams['teams'], blue_teams['dq'], blue_teams['surrogate'])
-        return MatchSimple(key, level, set_number, match_number, red_score, blue_score,
-                           red_teams, blue_teams, winner,
-                           scheduled_time, predicted_time, actual_time)
+        json.loads(raw_videos)
+        videos = []
+        for video in raw_videos:
+            videos.append(MatchVideo(video['key'], video['type']))
+        return Match(key, level, set_number, match_number,
+                red_score, blue_score,
+                red_teams, blue_teams,
+                winner,
+                datetime.fromisoformat(scheduled_time), datetime.fromisoformat(predicted_time),
+                datetime.fromisoformat(actual_time), datetime.fromisoformat(result_time),
+                videos
+        )
 
-    def _delete_match_simple(self, match_key: str) -> None:
-        self.__connection.execute('DELETE FROM match_simple WHERE key = ?', [match_key])
+    def _delete_match(self, match_key: str) -> None:
+        self.__connection.execute('DELETE FROM matches WHERE key = ?', [match_key])
         self.__connection.commit()
