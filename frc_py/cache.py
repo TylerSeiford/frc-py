@@ -59,9 +59,9 @@ class Cache:
     def __init_event_simple(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS event_simple (
             last_updated datetime,
-            key text, name text,
+            key text, year int, name text,
             city text, state_prov text, country text,
-            type text,
+            type int,
             start_date datetime, end_date datetime,
             event_district text
         )''')
@@ -70,9 +70,9 @@ class Cache:
     def save_event_simple(self, event: EventSimple) -> None:
         location = event.location()
         start, end = event.dates()
-        self.__connection.execute('INSERT INTO event_simple VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
+        self.__connection.execute('INSERT INTO event_simple VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
             datetime.utcnow().isoformat(),
-            event.key(), event.name(),
+            event.key(), EventSimple.event_key_to_year(event.key()), event.name(),
             location.city(), location.state_prov(), location.country(),
             event.event_type(),
             start, end,
@@ -87,7 +87,7 @@ class Cache:
         cursor.close()
         if result is None:
             return None
-        timestamp, key, name, city, state_prov, country, event_type, start, end, event_district = result
+        timestamp, key, _, name, city, state_prov, country, event_type, start, end, event_district = result
         timestamp = datetime.fromisoformat(timestamp)
         if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
             self._delete_event_simple(event_key)
@@ -102,7 +102,8 @@ class Cache:
     def __init_match_simple(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS match_simple (
             last_updated datetime,
-            key text, level text, set_number int, match_number text,
+            key text, year int, event text,
+            level text, set_number int, match_number int,
             red_score int, blue_score int,
             red_teams text, blue_teams text,
             winner text,
@@ -111,9 +112,10 @@ class Cache:
         self.__connection.commit()
 
     def save_match_simple(self, match: MatchSimple) -> None:
-        self.__connection.execute('INSERT INTO match_simple VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
+        self.__connection.execute('INSERT INTO match_simple VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
             datetime.utcnow().isoformat(),
-            match.key(), match.level(), match.set_number(), match.match_number(),
+            match.key(), MatchSimple.match_key_to_year(match.key()), MatchSimple.match_key_to_event(match.key()),
+            match.level(), match.set_number(), match.match_number(),
             match.red_score(), match.blue_score(),
             match.red_teams().toJSON(), match.blue_teams().toJSON(),
             match.winner(),
@@ -128,7 +130,7 @@ class Cache:
         cursor.close()
         if result is None:
             return None
-        timestamp, key, level, set_number, match_number, red_score, blue_score, red_teams, blue_teams, winner, scheduled_time, predicted_time, actual_time = result
+        timestamp, key, _, _, level, set_number, match_number, red_score, blue_score, red_teams, blue_teams, winner, scheduled_time, predicted_time, actual_time = result
         timestamp = datetime.fromisoformat(timestamp)
         if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
             self._delete_match_simple(match_key)
