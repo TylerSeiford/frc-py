@@ -11,6 +11,7 @@ class Cache:
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
         self.__connection = sqlite3.connect(os.path.join(cache_dir, 'cache.db'))
+        self.__init_team_index()
         self.__init_teams()
         self.__init_team_years()
         self.__init_team_year_events()
@@ -18,7 +19,46 @@ class Cache:
         self.__init_events()
         self.__init_event_teams()
         self.__init_event_matches()
+        self.__init_team_event_matches()
         self.__init_match_simple()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        self.__connection.close()
+
+
+    def __init_team_index(self) -> None:
+        self.__connection.execute('''CREATE TABLE IF NOT EXISTS team_index (
+            last_updated datetime,
+            teams text
+        )''')
+        self.__connection.commit()
+
+    def save_team_index(self, teams: list[str]) -> None:
+        self.__connection.execute('INSERT INTO team_index VALUES (?, ?)', (
+            datetime.utcnow().isoformat(),
+            json.dumps(teams)
+        ))
+        self.__connection.commit()
+
+    def get_team_index(self, cache_expiry: int) -> list[str] | None:
+        cursor = self.__connection.cursor()
+        cursor.execute('SELECT * FROM team_index')
+        result = cursor.fetchone()
+        if result is None:
+            return None
+        timestamp, teams = result
+        timestamp = datetime.fromisoformat(timestamp)
+        if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
+            self._delete_team_index()
+            return None
+        return json.loads(teams)
+
+    def _delete_team_index(self) -> None:
+        self.__connection.execute('DELETE FROM team_index')
+        self.__connection.commit()
 
 
     def __init_teams(self) -> None:
@@ -49,12 +89,22 @@ class Cache:
         cursor.close()
         if result is None:
             return None
-        timestamp, key, nickname, name, city, state_prov, country, school_name, website, rookie_year, motto = result
+        (
+            timestamp, key, nickname, name,
+            city, state_prov, country,
+            school_name, website,
+            rookie_year, motto
+        ) = result
         timestamp = datetime.fromisoformat(timestamp)
         if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
             self._delete_team(team_key)
             return None
-        return Team(key, nickname, name, Location(city, state_prov, country), school_name, website, rookie_year, motto)
+        return Team(
+            key, nickname, name,
+            Location(city, state_prov, country),
+            school_name, website,
+            rookie_year, motto
+        )
 
     def _delete_team(self, team_key: str) -> None:
         self.__connection.execute('DELETE FROM teams WHERE key = ?', [team_key])
@@ -82,7 +132,7 @@ class Cache:
         cursor.close()
         if result is None:
             return None
-        timestamp, key, years = result
+        timestamp, _, years = result
         timestamp = datetime.fromisoformat(timestamp)
         if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
             self._delete_team_years(team_key)
@@ -110,12 +160,13 @@ class Cache:
 
     def get_team_year_events(self, team_key: str, year: int, cache_expiry: int) -> list[str] | None:
         cursor = self.__connection.cursor()
-        cursor.execute('SELECT * FROM team_year_events WHERE key = ? AND year = ?', [team_key, year])
+        cursor.execute('SELECT * FROM team_year_events WHERE key = ? AND year = ?',
+                [team_key, year])
         result = cursor.fetchone()
         cursor.close()
         if result is None:
             return None
-        timestamp, key, year, events = result
+        timestamp, _, year, events = result
         timestamp = datetime.fromisoformat(timestamp)
         if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
             self._delete_team_year_events(team_key, year)
@@ -123,7 +174,8 @@ class Cache:
         return json.loads(events)
 
     def _delete_team_year_events(self, team_key: str, year: int) -> None:
-        self.__connection.execute('DELETE FROM team_year_events WHERE key = ? AND year = ?', [team_key, year])
+        self.__connection.execute('DELETE FROM team_year_events WHERE key = ? AND year = ?',
+                [team_key, year])
         self.__connection.commit()
 
 
@@ -182,18 +234,20 @@ class Cache:
         webcasts = []
         for webcast in event.webcasts():
             webcasts.append(webcast.to_json())
-        self.__connection.execute('INSERT INTO events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
+        self.__connection.execute('INSERT INTO events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '
+                '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
             datetime.utcnow().isoformat(),
             event.key(), Event.event_key_to_year(event.key()), event.name(),
             location.city(), location.state_prov(), location.country(),
             event.event_type(),
             start, end,
-            event.district_key(), 
+            event.district_key(),
             event.short_name(), event.week(), event.address(), event.postal_code(),
             event.gmaps_place_id(), event.gmaps_url(), event.lat(), event.lng(),
             event.location_name(), event.timezone(),
             event.website(), event.first_event_id(), event.first_event_code(),
-            json.dumps(webcasts), json.dumps(event.divisions()), event.parent_event_key(), event.playoff_type()
+            json.dumps(webcasts), json.dumps(event.divisions()),
+            event.parent_event_key(), event.playoff_type()
         ))
         self.__connection.commit()
 
@@ -225,7 +279,8 @@ class Cache:
         webcasts = []
         for webcast in raw_webcasts:
             webcast = json.loads(webcast)
-            webcasts.append(Webcast(webcast['type'], webcast['channel'], webcast['date'], webcast['file']))
+            webcasts.append(Webcast(webcast['type'], webcast['channel'],
+                    webcast['date'], webcast['file']))
         return Event(
             key, name,
             Location(city, state_prov, country),
@@ -265,7 +320,7 @@ class Cache:
         cursor.close()
         if result is None:
             return None
-        timestamp, event, teams = result
+        timestamp, _, teams = result
         timestamp = datetime.fromisoformat(timestamp)
         if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
             self._delete_event_teams(event_key)
@@ -298,7 +353,7 @@ class Cache:
         cursor.close()
         if result is None:
             return None
-        timestamp, event, matches = result
+        timestamp, _, matches = result
         timestamp = datetime.fromisoformat(timestamp)
         if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
             self._delete_event_matches(event_key)
@@ -307,6 +362,42 @@ class Cache:
 
     def _delete_event_matches(self, event_key: str) -> None:
         self.__connection.execute('DELETE FROM event_matches WHERE event = ?', [event_key])
+        self.__connection.commit()
+
+
+    def __init_team_event_matches(self) -> None:
+        self.__connection.execute('''CREATE TABLE IF NOT EXISTS team_event_matches (
+            last_updated datetime,
+            team text, event text, matches text
+        )''')
+        self.__connection.commit()
+
+    def save_team_event_matches(self, team_key: str, event_key: str, matches: list[str]) -> None:
+        self.__connection.execute('INSERT INTO team_event_matches VALUES (?, ?, ?, ?)', (
+            datetime.utcnow().isoformat(),
+            team_key, event_key, json.dumps(matches)
+        ))
+        self.__connection.commit()
+
+    def get_team_event_matches(self, team_key: str, event_key: str,
+            cache_expiry: int) -> list[str] | None:
+        cursor = self.__connection.cursor()
+        cursor.execute('SELECT * FROM team_event_matches WHERE team = ? AND event = ?',
+                [team_key, event_key])
+        result = cursor.fetchone()
+        cursor.close()
+        if result is None:
+            return None
+        timestamp, _, _, matches = result
+        timestamp = datetime.fromisoformat(timestamp)
+        if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
+            self._delete_team_event_matches(team_key, event_key)
+            return None
+        return json.loads(matches)
+
+    def _delete_team_event_matches(self, team_key: str, event_key: str) -> None:
+        self.__connection.execute('DELETE FROM team_event_matches WHERE team = ? AND event = ?',
+                [team_key, event_key])
         self.__connection.commit()
 
 
@@ -323,9 +414,12 @@ class Cache:
         self.__connection.commit()
 
     def save_match_simple(self, match: MatchSimple) -> None:
-        self.__connection.execute('INSERT INTO match_simple VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
+        self.__connection.execute('INSERT INTO match_simple VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '
+                '?, ?, ?, ?, ?, ?)', (
             datetime.utcnow().isoformat(),
-            match.key(), MatchSimple.match_key_to_year(match.key()), MatchSimple.match_key_to_event(match.key()),
+            match.key(),
+            MatchSimple.match_key_to_year(match.key()),
+            MatchSimple.match_key_to_event(match.key()),
             match.level(), match.set_number(), match.match_number(),
             match.red_score(), match.blue_score(),
             match.red_teams().to_json(), match.blue_teams().to_json(),
@@ -341,7 +435,11 @@ class Cache:
         cursor.close()
         if result is None:
             return None
-        timestamp, key, _, _, level, set_number, match_number, red_score, blue_score, red_teams, blue_teams, winner, scheduled_time, predicted_time, actual_time = result
+        (
+            timestamp, key, _, _, level, set_number, match_number, red_score, blue_score,
+            red_teams, blue_teams, winner,
+            scheduled_time, predicted_time, actual_time
+        ) = result
         timestamp = datetime.fromisoformat(timestamp)
         if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
             self._delete_match_simple(match_key)
@@ -357,16 +455,3 @@ class Cache:
     def _delete_match_simple(self, match_key: str) -> None:
         self.__connection.execute('DELETE FROM match_simple WHERE key = ?', [match_key])
         self.__connection.commit()
-
-
-    # Todo: Remove
-    def is_cached(self, path: list[str], file: str) -> bool:
-        return False
-
-    def save(self, path: list[str], file: str, data: any) -> None:
-        # print(f"Saving {os.path.join(*path, file)}: {data}")
-        return None
-
-    def get(self, path: list[str], file: str) -> any:
-        # print(f"Getting {os.path.join(*path, file)}")
-        return None

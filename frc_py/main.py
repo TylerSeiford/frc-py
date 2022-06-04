@@ -38,19 +38,27 @@ class FRC_PY:
         self.__statbotics_client = statbotics.Statbotics()
         self.__cache = Cache()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        self.__cache.__exit__(exc_type, exc_value, traceback)
+
+
     def _tba_client(self) -> tbapy.TBA:
         return self.__tba_client
 
     def _stat_client(self) -> statbotics.Statbotics:
         return self.__statbotics_client
 
+
     def year_range(self) -> tuple[int, int]:
         status = self.__tba_client.status()
         return (1992, status['max_season'])
 
     def get_teams(self, cached: bool = True, cache_expiry: int = 90) -> list:
-        if cached and self.__cache.is_cached(['teams'], 'index_tba'):
-            teams = self.__cache.get(['teams'], 'index_tba', cache_expiry)
+        if cached:
+            teams = self.__cache.get_team_index(cache_expiry)
             if teams is not None:
                 return teams
         teams = []
@@ -63,7 +71,7 @@ class FRC_PY:
                 teams.append(team)
             page += 1
         if cached:
-            self.__cache.save(['teams'], 'index_tba', teams)
+            self.__cache.save_team_index(teams)
         return teams
 
     def team_years(self, team: str, cached: bool = True, cache_expiry: int = 90) -> list[int]:
@@ -96,7 +104,8 @@ class FRC_PY:
             self.__cache.save_team(team)
         return team
 
-    def team_year_events(self, team: str, year: int, cached: bool = True, cache_expiry: int = 90) -> list[str]:
+    def team_year_events(self, team: str, year: int, cached: bool = True,
+            cache_expiry: int = 90) -> list[str]:
         if cached:
             events = self.__cache.get_team_year_events(team, year, cache_expiry)
             if events is not None:
@@ -137,9 +146,9 @@ class FRC_PY:
                 file = None
             webcasts.append(Webcast(webcast['type'], webcast['channel'], date, file))
         event = Event(
-            key, event.name, Location(event.city, event.state_prov, event.country), event.event_type,
-            (event.start_date, event.end_date), district, event.short_name, event.week,
-            event.address, event.postal_code, event.gmaps_place_id, event.gmaps_url,
+            key, event.name, Location(event.city, event.state_prov, event.country),
+            event.event_type, (event.start_date, event.end_date), district, event.short_name,
+            event.week, event.address, event.postal_code, event.gmaps_place_id, event.gmaps_url,
             event.lat, event.lng, event.location_name, event.timezone,
             event.website, event.first_event_id, event.first_event_code,
             webcasts, event.division_keys, event.parent_event_key, event.playoff_type
@@ -168,14 +177,15 @@ class FRC_PY:
             self.__cache.save_event_matches(event, matches)
         return matches
 
-    def get_team_event_matches(self, team: str, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:
-        if cached and self.__cache.is_cached(['teams', team, event], 'matches_tba'):
-            matches = self.__cache.get(['teams', team, event], 'matches_tba', cache_expiry)
+    def team_event_matches(self, team: str, event: str, cached: bool = True,
+            cache_expiry: int = 90) -> list[str]:
+        if cached:
+            matches = self.__cache.get_team_event_matches(team, event, cache_expiry)
             if matches is not None:
                 return matches
         matches = self.__tba_client.team_matches(team, event, keys=True)
         if cached:
-            self.__cache.save(['teams', team, event], 'matches_tba', matches)
+            self.__cache.save_team_event_matches(team, event, matches)
         return matches
 
     def match_simple(self, key: str, cached: bool = True, cache_expiry: int = 90) -> MatchSimple:
