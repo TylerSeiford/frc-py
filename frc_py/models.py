@@ -64,20 +64,72 @@ class Team:
         return self.__motto
 
 
-class EventSimple: # TODO: Convert to full event
+class Webcast:
+    def __init__(self, webcast_type: str, channel: str, date: str, file: str):
+        self.__type = webcast_type
+        self.__channel = channel
+        self.__date = date
+        self.__file = file
+
+    def webcast_type(self) -> str:
+        return self.__type
+
+    def channel(self) -> str:
+        return self.__channel
+
+    def date(self) -> str | None:
+        return self.__date
+
+    def file(self) -> str | None:
+        return self.__file
+
+    def __str__(self) -> str:
+        return f"{self.__type} {self.__channel} {self.__date} {self.__file}"
+
+    def to_json(self) -> str:
+        return json.dumps({
+            'type': self.__type,
+            'channel': self.__channel,
+            'date': self.__date,
+            'file': self.__file
+        })
+
+
+class Event:
     @staticmethod
     def event_key_to_year(event_key: str) -> int:
         return int(event_key[:4])
 
 
-    def __init__(self, key: str, name: str, location: Location, event_type: int, dates: tuple[str, str],
-            district_key: str):
+    def __init__(self, key: str, name: str, location: Location, event_type: int,
+            dates: tuple[str, str], district_key: str, short_name: str, week: int,
+            address: str, postal_code: str, gmaps_place_id: str, gmaps_url: str,
+            lat: float, lng: float, location_name: str, timezone: str,
+            website: str, first_event_id: str, first_event_code: str,
+            webcasts: list[Webcast], divisions: list[str], parent_event_key: str, playoff_type: int):
         self.__key = key
         self.__name = name
         self.__location = location
         self.__type = event_type
         self.__dates = dates
         self.__district_key = district_key
+        self.__short_name = short_name
+        self.__week = week
+        self.__address = address
+        self.__postal_code = postal_code
+        self.__gmaps_place_id = gmaps_place_id
+        self.__gmaps_url = gmaps_url
+        self.__lat = lat
+        self.__lng = lng
+        self.__location_name = location_name
+        self.__timezone = timezone
+        self.__website = website
+        self.__first_event_id = first_event_id
+        self.__first_event_code = first_event_code
+        self.__webcasts = webcasts
+        self.__divisions = divisions
+        self.__parent_event_key = parent_event_key
+        self.__playoff_type = playoff_type
 
     def key(self) -> str:
         return self.__key
@@ -156,6 +208,90 @@ class EventSimple: # TODO: Convert to full event
     def district_key(self) -> str:
         return self.__district_key
 
+    def short_name(self) -> str:
+        return self.__short_name
+
+    def week(self) -> int:
+        return self.__week
+
+    def address(self) -> str:
+        return self.__address
+
+    def postal_code(self) -> str:
+        return self.__postal_code
+
+    def gmaps_place_id(self) -> str:
+        return self.__gmaps_place_id
+
+    def gmaps_url(self) -> str:
+        return self.__gmaps_url
+
+    def lat(self) -> float:
+        return self.__lat
+
+    def lng(self) -> float:
+        return self.__lng
+
+    def location_name(self) -> str:
+        return self.__location_name
+
+    def timezone(self) -> str:
+        return self.__timezone
+
+    def website(self) -> str:
+        return self.__website
+
+    def first_event_id(self) -> str:
+        return self.__first_event_id
+
+    def first_event_code(self) -> str:
+        return self.__first_event_code
+
+    def webcasts(self) -> list[Webcast]:
+        return self.__webcasts
+
+    def divisions(self) -> list[str]:
+        return self.__divisions
+
+    def parent_event_key(self) -> str:
+        return self.__parent_event_key
+
+    def playoff_type(self) -> int:
+        return self.__playoff_type
+
+    def playoff_type_str(self) -> str:
+        match(self.__playoff_type):
+            case 0:
+                return 'Elimination Bracket (8 Alliances)'
+            case 1:
+                return 'Elimination Bracket (16 Alliances)'
+            case 2:
+                return 'Elimination Bracket (4 Alliances)'
+            case 3:
+                return 'Average Score (8 Alliances)'
+            case 4:
+                return 'Round Robin (8 Alliances)'
+            case 5:
+                return 'Double Elimination Bracket (8 Alliances)'
+            case 6:
+                return 'Best of 3 Finals'
+            case 7:
+                return 'Best of 5 Finals'
+            case 8:
+                return 'Custom'
+
+    def is_bracket_event(self) -> bool:
+        return self.playoff_type_str() in {
+            'Elimination Bracket (8 Alliances)',
+            'Elimination Bracket (16 Alliances)',
+            'Elimination Bracket (4 Alliances)'
+        }
+
+    def is_double_elimination_event(self) -> bool:
+        return self.playoff_type_str() in {
+            'Double Elimination Bracket (8 Alliances)'
+        }
+
 
 class MatchAlliance:
     def __init__(self, teams: list[str], dq: list[str], surrogate: list[str]):
@@ -175,7 +311,7 @@ class MatchAlliance:
     def __str__(self) -> str:
         return f"{self.__teams}, {self.__dq}, {self.__surrogate}"
 
-    def toJSON(self) -> str:
+    def to_json(self) -> str:
         return json.dumps({
             'teams': self.__teams,
             'dq': self.__dq,

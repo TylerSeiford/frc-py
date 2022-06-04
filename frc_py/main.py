@@ -1,7 +1,7 @@
 from datetime import datetime
 import tbapy
 import statbotics
-from .models import EventSimple, Location, Team, MatchAlliance, MatchSimple
+from .models import Location, Team, Webcast, Event, MatchAlliance, MatchSimple
 from .cache import Cache
 
 
@@ -116,24 +116,36 @@ class FRC_PY:
             self.__cache.save(['events', str(year)], 'events_tba', events)
         return events
 
-    def event_simple(self, key: str, cached: bool = True, cache_expiry: int = 90) -> EventSimple:
+    def event(self, key: str, cached: bool = True, cache_expiry: int = 90) -> Event:
         if cached:
-            event = self.__cache.get_event_simple(key, cache_expiry)
+            event = self.__cache.get_event(key, cache_expiry)
             if event is not None:
                 return event
-        event = self.__tba_client.event(key, simple=True)
+        event = self.__tba_client.event(key)
         district = event.district
         if district is not None:
             district = district['key']
-        event = EventSimple(
-            key, event.name,
-            Location(event.city, event.state_prov, event.country),
-            event.event_type,
-            (event.start_date, event.end_date),
-            district
+        webcasts = []
+        for webcast in event.webcasts:
+            try:
+                date = webcast['date']
+            except KeyError:
+                date = None
+            try:
+                file = webcast['file']
+            except KeyError:
+                file = None
+            webcasts.append(Webcast(webcast['type'], webcast['channel'], date, file))
+        event = Event(
+            key, event.name, Location(event.city, event.state_prov, event.country), event.event_type,
+            (event.start_date, event.end_date), district, event.short_name, event.week,
+            event.address, event.postal_code, event.gmaps_place_id, event.gmaps_url,
+            event.lat, event.lng, event.location_name, event.timezone,
+            event.website, event.first_event_id, event.first_event_code,
+            webcasts, event.division_keys, event.parent_event_key, event.playoff_type
         )
         if cached:
-            self.__cache.save_event_simple(event)
+            self.__cache.save_event(event)
         return event
 
     def get_event_teams(self, event: str, cached: bool = True, cache_expiry: int = 90) -> list[str]:

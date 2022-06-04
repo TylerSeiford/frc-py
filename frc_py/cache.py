@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import os
 import sqlite3
 import json
-from .models import Location, Team, EventSimple, MatchAlliance, MatchSimple
+from .models import Location, Team, Webcast, Event, MatchAlliance, MatchSimple
 
 
 
@@ -11,12 +11,12 @@ class Cache:
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
         self.__connection = sqlite3.connect(os.path.join(cache_dir, 'cache.db'))
-        self.__init_team()
-        self.__init_event_simple()
+        self.__init_teams()
+        self.__init_events()
         self.__init_match_simple()
 
 
-    def __init_team(self) -> None:
+    def __init_teams(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS teams (
             last_updated datetime,
             key text, nickname text, name text,
@@ -56,46 +56,87 @@ class Cache:
         self.__connection.commit()
 
 
-    def __init_event_simple(self) -> None:
-        self.__connection.execute('''CREATE TABLE IF NOT EXISTS event_simple (
+    def __init_events(self) -> None:
+        self.__connection.execute('''CREATE TABLE IF NOT EXISTS events (
             last_updated datetime,
             key text, year int, name text,
             city text, state_prov text, country text,
             type int,
             start_date datetime, end_date datetime,
-            event_district text
+            event_district text,
+            short_name text, week int, address text, postal_code text,
+            gmaps_place_id text, gmaps_url text, lat float, lng float,
+            location_name text, timezone text,
+            website text, fisrt_event_id text, first_event_code text,
+            webcasts text, divisions text, parent_event_key text, playoff_type text
         )''')
         self.__connection.commit()
 
-    def save_event_simple(self, event: EventSimple) -> None:
+    def save_event(self, event: Event) -> None:
         location = event.location()
         start, end = event.dates()
-        self.__connection.execute('INSERT INTO event_simple VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
+        webcasts = []
+        for webcast in event.webcasts():
+            webcasts.append(webcast.to_json())
+        self.__connection.execute('INSERT INTO events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
             datetime.utcnow().isoformat(),
-            event.key(), EventSimple.event_key_to_year(event.key()), event.name(),
+            event.key(), Event.event_key_to_year(event.key()), event.name(),
             location.city(), location.state_prov(), location.country(),
             event.event_type(),
             start, end,
-            event.district_key()
+            event.district_key(), 
+            event.short_name(), event.week(), event.address(), event.postal_code(),
+            event.gmaps_place_id(), event.gmaps_url(), event.lat(), event.lng(),
+            event.location_name(), event.timezone(),
+            event.website(), event.first_event_id(), event.first_event_code(),
+            json.dumps(webcasts), json.dumps(event.divisions()), event.parent_event_key(), event.playoff_type()
         ))
         self.__connection.commit()
 
-    def get_event_simple(self, event_key: str, cache_expiry) -> EventSimple | None:
+    def get_event(self, event_key: str, cache_expiry) -> Event | None:
         cursor = self.__connection.cursor()
-        cursor.execute('SELECT * FROM event_simple WHERE key = ?', [event_key])
+        cursor.execute('SELECT * FROM events WHERE key = ?', [event_key])
         result = cursor.fetchone()
         cursor.close()
         if result is None:
             return None
-        timestamp, key, _, name, city, state_prov, country, event_type, start, end, event_district = result
+        (
+            timestamp,
+            key, _, name,
+            city, state_prov, country,
+            event_type,
+            start, end,
+            event_district,
+            short_name, week, address, postal_code,
+            gmaps_place_id, gmaps_url, lat, lng,
+            location_name, timezone,
+            website, first_event_id, first_event_code,
+            raw_webcasts, divisions, parent_event_key, playoff_type
+        ) = result
         timestamp = datetime.fromisoformat(timestamp)
         if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
-            self._delete_event_simple(event_key)
+            self._delete_event(event_key)
             return None
-        return EventSimple(key, name, Location(city, state_prov, country), event_type, (start, end), event_district)
+        raw_webcasts = json.loads(raw_webcasts)
+        webcasts = []
+        for webcast in raw_webcasts:
+            webcast = json.loads(webcast)
+            webcasts.append(Webcast(webcast['type'], webcast['channel'], webcast['date'], webcast['file']))
+        return Event(
+            key, name,
+            Location(city, state_prov, country),
+            event_type,
+            (start, end),
+            event_district,
+            short_name, week, address, postal_code,
+            gmaps_place_id, gmaps_url, lat, lng,
+            location_name, timezone,
+            website, first_event_id, first_event_code,
+            webcasts, divisions, parent_event_key, playoff_type
+        )
 
-    def _delete_event_simple(self, event_key: str) -> None:
-        self.__connection.execute('DELETE FROM event_simple WHERE key = ?', [event_key])
+    def _delete_event(self, event_key: str) -> None:
+        self.__connection.execute('DELETE FROM events WHERE key = ?', [event_key])
         self.__connection.commit()
 
 
@@ -117,7 +158,7 @@ class Cache:
             match.key(), MatchSimple.match_key_to_year(match.key()), MatchSimple.match_key_to_event(match.key()),
             match.level(), match.set_number(), match.match_number(),
             match.red_score(), match.blue_score(),
-            match.red_teams().toJSON(), match.blue_teams().toJSON(),
+            match.red_teams().to_json(), match.blue_teams().to_json(),
             match.winner(),
             match.schedule_time(), match.predicted_time(), match.actual_time()
         ))
