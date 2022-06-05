@@ -59,11 +59,11 @@ class FRCPy:
 
 
     def year_range(self) -> tuple[int, int]:
-        '''Get the year range of events'''
+        '''Get the year range of events (uncached)'''
         status = self.__tba_client.status()
         return (1992, status['max_season'])
 
-    def get_teams(self, cached: bool = True, cache_expiry: int = 90) -> list:
+    def teams(self, cached: bool = True, cache_expiry: int = 90) -> list:
         '''Get all teams'''
         if cached:
             teams = self.__cache.get_team_index(cache_expiry)
@@ -217,6 +217,18 @@ class FRCPy:
         videos = []
         for video in match.videos:
             videos.append(MatchVideo(video['type'], video['key']))
+        scheduled_time = match.time
+        if scheduled_time is not None:
+            scheduled_time = datetime.fromtimestamp(scheduled_time)
+        predicted_time = match.predicted_time
+        if predicted_time is not None:
+            predicted_time = datetime.fromtimestamp(predicted_time)
+        actual_time = match.actual_time
+        if actual_time is not None:
+            actual_time = datetime.fromtimestamp(actual_time)
+        post_result_time = match.post_result_time
+        if post_result_time is not None:
+            post_result_time = datetime.fromtimestamp(post_result_time)
         match = Match(
             key, match.comp_level, match.set_number, match.match_number,
             red_score, blue_score,
@@ -231,10 +243,10 @@ class FRCPy:
                 match.alliances['blue']['surrogate_team_keys']
             ),
             winner,
-            datetime.fromtimestamp(match.time),
-            datetime.fromtimestamp(match.predicted_time),
-            datetime.fromtimestamp(match.actual_time),
-            datetime.fromtimestamp(match.post_result_time),
+            scheduled_time,
+            predicted_time,
+            actual_time,
+            post_result_time,
             videos
         )
         if cached:

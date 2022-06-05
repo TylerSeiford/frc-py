@@ -487,12 +487,19 @@ class Cache:
         for video in raw_videos:
             video = json.loads(video)
             videos.append(MatchVideo(video['key'], video['type']))
+        if scheduled_time is not None:
+            scheduled_time = datetime.fromisoformat(scheduled_time)
+        if predicted_time is not None:
+            predicted_time = datetime.fromisoformat(predicted_time)
+        if actual_time is not None:
+            actual_time = datetime.fromisoformat(actual_time)
+        if result_time is not None:
+            result_time = datetime.fromisoformat(result_time)
         return Match(key, level, set_number, match_number,
                 red_score, blue_score,
                 red_teams, blue_teams,
                 winner,
-                datetime.fromisoformat(scheduled_time), datetime.fromisoformat(predicted_time),
-                datetime.fromisoformat(actual_time), datetime.fromisoformat(result_time),
+                scheduled_time, predicted_time, actual_time, result_time,
                 videos
         )
 

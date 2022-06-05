@@ -10,7 +10,7 @@ if __name__ == '__main__':
     TOKEN = os.environ['SECRET_TBA_TOKEN'] # Replace with your TBA token
     with FRCPy(TOKEN) as api:
         print('***** Teams *****')
-        teams: list[str] = api.get_teams()
+        teams: list[str] = api.teams()
         print(f"Found {len(teams)} teams")
         print(f"Years: {api.team_years('frc2501')}")
         team = api.team('frc2501')
