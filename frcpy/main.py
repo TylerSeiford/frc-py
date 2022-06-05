@@ -2,9 +2,10 @@
 Interact with the TBA and Statbotics APIs
 '''
 from datetime import datetime
+import googlemaps
 import tbapy
 import statbotics
-from .models import Location, Team, Webcast, Event, MatchAlliance, MatchVideo, Match
+from .models import Location, Team, TeamYearStats, Webcast, Event, MatchAlliance, MatchVideo, Match
 from .cache import Cache
 
 
@@ -39,9 +40,13 @@ class FRCPy:
         return winner
 
 
-    def __init__(self, tba_token: str):
+    def __init__(self, tba_token: str, gmaps_token: str = ''):
         self.__tba_client = tbapy.TBA(tba_token)
         self.__statbotics_client = statbotics.Statbotics()
+        if gmaps_token != '':
+            self.__gmaps_client = googlemaps.Client(gmaps_token)
+        else:
+            self.__gmaps_client = None
         self.__cache = Cache()
 
     def __enter__(self):
@@ -56,6 +61,9 @@ class FRCPy:
 
     def _stat_client(self) -> statbotics.Statbotics:
         return self.__statbotics_client
+
+    def _gmaps_client(self) -> googlemaps.Client | None:
+        return self.__gmaps_client
 
     def _cache(self) -> Cache:
         return self.__cache
@@ -128,6 +136,51 @@ class FRCPy:
         if cached:
             self.__cache.save_team_year_events(team, year, events)
         return events
+
+    def team_year_stats(self, team: str, year: int, cached: bool = True,
+            cache_expiry: int = 90) -> dict:
+        '''Get the stats for a team in a year'''
+        if cached:
+            stats = self.__cache.get_team_year_stats(team, year, cache_expiry)
+            if stats is not None:
+                return stats
+        stats = self.__statbotics_client.get_team_year(
+            Team.team_key_to_number(team), year
+        )
+        elo_start = stats['elo_start']
+        elo_pre_champs = stats['elo_pre_champs']
+        elo_end = stats['elo_end']
+        elo_mean = stats['elo_mean']
+        elo_max = stats['elo_max']
+        elo_diff = stats['elo_diff']
+        opr = stats['opr']
+        opr_auto = stats['opr_auto']
+        opr_teleop = stats['opr_teleop']
+        opr_1 = stats['opr_1']
+        opr_2 = stats['opr_2']
+        opr_endgame = stats['opr_endgame']
+        opr_fouls = stats['opr_fouls']
+        opr_no_fouls = stats['opr_no_fouls']
+        ils_1 = stats['ils_1']
+        ils_2 = stats['ils_2']
+        wins = stats['wins']
+        losses = stats['losses']
+        ties = stats['ties']
+        count = stats['count']
+        winrate = stats['winrate']
+        elo_rank = stats['elo_rank']
+        elo_percentile = stats['elo_percentile']
+        opr_rank = stats['opr_rank']
+        opr_percentile = stats['opr_percentile']
+        stats = TeamYearStats(
+            team, year, elo_start, elo_pre_champs, elo_end, elo_mean, elo_max,
+            elo_diff, opr, opr_auto, opr_teleop, opr_1, opr_2, opr_endgame,
+            opr_fouls, opr_no_fouls, ils_1, ils_2, wins, losses, ties, count,
+            winrate, elo_rank, elo_percentile, opr_rank, opr_percentile
+        )
+        if cached:
+            self.__cache.save_team_year_stats(team, year, stats)
+        return stats
 
     def year_events(self, year: int, cached: bool = True, cache_expiry: int = 90) -> list[str]:
         '''Get all the events in a year'''

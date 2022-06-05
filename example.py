@@ -9,14 +9,17 @@ from frcpy import FRCPy
 
 if __name__ == '__main__':
     try:
-        # Load the token from the environment
-        TOKEN = os.environ['SECRET_TBA_TOKEN']
+        # Load the tokens from the environment
+        TBA_TOKEN = os.environ['SECRET_TBA_TOKEN']
+        GMAPS_TOKEN = os.environ['SECRET_GMAPS_TOKEN']
     except KeyError:
         # Or load from JSON file
         with open('token.json', 'r', encoding='UTF+8') as f:
-            TOKEN = json.load(f)
+            tokens = json.load(f)
+            TBA_TOKEN = tokens['TBA']
+            GMAPS_TOKEN = tokens['GMAPS']
 
-    with FRCPy(TOKEN) as api:
+    with FRCPy(TBA_TOKEN, GMAPS_TOKEN) as api:
         print('***** Teams *****')
         teams: list[str] = api.teams()
         print(f"Found {len(teams)} teams")

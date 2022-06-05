@@ -86,6 +86,158 @@ class Team:
         return self.__motto
 
 
+class TeamYearStats:
+    '''
+    Represents a team's statistics for a single year
+    '''
+    def __init__(self, team_key: str, year: int,
+            elo_start: float, elo_pre_champs: float, elo_end: float,
+            elo_mean: float, elo_max: float, elo_diff: float,
+            opr: float, opr_auto: float, opr_teleop: float, opr_1: float, opr_2: float,
+            opr_endgame: float, opr_fouls: float, opr_no_fouls: float,
+            ils_1: float, ils_2: float,
+            wins: int, losses: int, ties: int, count: int,
+            winrate: float,
+            elo_rank: int, elo_percentile: float,
+            opr_rank: int, opr_percentile: float
+    ) -> None:
+        self.__team_key = team_key
+        self.__year = year
+        self.__elo_start = elo_start
+        self.__elo_pre_champs = elo_pre_champs
+        self.__elo_end = elo_end
+        self.__elo_mean = elo_mean
+        self.__elo_max = elo_max
+        self.__elo_diff = elo_diff
+        self.__opr = opr
+        self.__opr_auto = opr_auto
+        self.__opr_teleop = opr_teleop
+        self.__opr_1 = opr_1
+        self.__opr_2 = opr_2
+        self.__opr_endgame = opr_endgame
+        self.__opr_fouls = opr_fouls
+        self.__opr_no_fouls = opr_no_fouls
+        self.__ils_1 = ils_1
+        self.__ils_2 = ils_2
+        self.__wins = wins
+        self.__losses = losses
+        self.__ties = ties
+        self.__count = count
+        self.__winrate = winrate
+        self.__elo_rank = elo_rank
+        self.__elo_percentile = elo_percentile
+        self.__opr_rank = opr_rank
+        self.__opr_percentile = opr_percentile
+
+    def team_key(self) -> str:
+        '''Returns the key of this team'''
+        return self.__team_key
+
+    def year(self) -> int:
+        '''Returns the year of this team'''
+        return self.__year
+
+    def elo_start(self) -> float:
+        '''Returns the starting elo of this team'''
+        return self.__elo_start
+
+    def elo_pre_champs(self) -> float:
+        '''Returns the elo before the championship of this team'''
+        return self.__elo_pre_champs
+
+    def elo_end(self) -> float:
+        '''Returns the ending elo of this team'''
+        return self.__elo_end
+
+    def elo_mean(self) -> float:
+        '''Returns the mean elo of this team'''
+        return self.__elo_mean
+
+    def elo_max(self) -> float:
+        '''Returns the max elo of this team'''
+        return self.__elo_max
+
+    def elo_diff(self) -> float:
+        '''Returns the elo difference of this team'''
+        return self.__elo_diff
+
+    def opr(self) -> float:
+        '''Returns the opr of this team'''
+        return self.__opr
+
+    def opr_auto(self) -> float:
+        '''Returns the opr auto of this team'''
+        return self.__opr_auto
+
+    def opr_teleop(self) -> float:
+        '''Returns the opr teleop of this team'''
+        return self.__opr_teleop
+
+    def opr_1(self) -> float:
+        '''Returns the opr 1 of this team'''
+        return self.__opr_1
+
+    def opr_2(self) -> float:
+        '''Returns the opr 2 of this team'''
+        return self.__opr_2
+
+    def opr_endgame(self) -> float:
+        '''Returns the opr endgame of this team'''
+        return self.__opr_endgame
+
+    def opr_fouls(self) -> float:
+        '''Returns the opr fouls of this team'''
+        return self.__opr_fouls
+
+    def opr_no_fouls(self) -> float:
+        '''Returns the opr no fouls of this team'''
+        return self.__opr_no_fouls
+
+    def ils_1(self) -> float:
+        '''Returns the ils 1 of this team'''
+        return self.__ils_1
+
+    def ils_2(self) -> float:
+        '''Returns the ils 2 of this team'''
+        return self.__ils_2
+
+    def wins(self) -> int:
+        '''Returns the wins of this team'''
+        return self.__wins
+
+    def losses(self) -> int:
+        '''Returns the losses of this team'''
+        return self.__losses
+
+    def ties(self) -> int:
+        '''Returns the ties of this team'''
+        return self.__ties
+
+    def count(self) -> int:
+        '''Returns the count of this team'''
+        return self.__count
+
+    def winrate(self) -> float:
+        '''Returns the winrate of this team'''
+        return self.__winrate
+
+    def elo_rank(self) -> int:
+        '''Returns the elo rank of this team'''
+        return self.__elo_rank
+
+    def elo_percentile(self) -> float:
+        '''Returns the elo percentile of this team'''
+        return self.__elo_percentile
+
+    def opr_rank(self) -> int:
+        '''Returns the opr rank of this team'''
+        return self.__opr_rank
+
+    def opr_percentile(self) -> float:
+        '''Returns the opr percentile of this team'''
+        return self.__opr_percentile
+
+
 class Webcast:
     '''
     Represents a webcast
@@ -420,7 +572,6 @@ class MatchVideo:
             'type': self.__type,
             'key': self.__key
         })
-
 
 
 class Match:

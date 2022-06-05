@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import os
 import sqlite3
 import json
-from .models import Location, Team, Webcast, Event, MatchAlliance, MatchVideo, Match
+from .models import Location, Team, TeamYearStats, Webcast, Event, MatchAlliance, MatchVideo, Match
 
 
 
@@ -21,6 +21,7 @@ class Cache:
         self.__init_teams()
         self.__init_team_years()
         self.__init_team_year_events()
+        self.__init_team_year_stats()
         self.__init_year_events()
         self.__init_events()
         self.__init_event_teams()
@@ -189,6 +190,86 @@ class Cache:
 
     def _delete_team_year_events(self, team_key: str, year: int) -> None:
         self.__connection.execute('DELETE FROM team_year_events WHERE key = ? AND year = ?',
+                [team_key, year])
+        self.__connection.commit()
+
+
+    def __init_team_year_stats(self) -> None:
+        self.__connection.execute('''CREATE TABLE IF NOT EXISTS team_year_stats (
+            last_updated datetime,
+            team_key text, year int
+            elo_start float, elo_pre_champs float, elo_end float,
+            elo_mean float, elo_max float, elo_diff float,
+            opr float, opr_auto float, opr_teleop float, opr_1 float, opr_2 float,
+            opr_endgame float, opr_foul float, opr_no_fouls float,
+            ils_1 float, ils_2 float,
+            wins int, losses int, ties int, count int,
+            winrate float,
+            elo_rank int, elo_percentile float,
+            opr_rank int, opr_percentile float
+        )''')
+        self.__connection.commit()
+
+    def save_team_year_stats(self, team_key: str, year: int, stats: TeamYearStats) -> None:
+        '''Save the stats for a team in a given year'''
+        self.__connection.execute('INSERT INTO team_year_stats VALUES (?, ?, ?, ?, ?, ?, ?, ?, '
+            '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
+            datetime.utcnow().isoformat(),
+            team_key, year,
+            stats.elo_start(), stats.elo_pre_champs(), stats.elo_end(),
+            stats.elo_mean(), stats.elo_max(), stats.elo_diff(),
+            stats.opr(), stats.opr_auto(), stats.opr_teleop(), stats.opr_1(), stats.opr_2(),
+            stats.opr_endgame(), stats.opr_fouls(), stats.opr_no_fouls(),
+            stats.ils_1(), stats.ils_2(),
+            stats.wins(), stats.losses(), stats.ties(), stats.count(),
+            stats.winrate(),
+            stats.elo_rank(), stats.elo_percentile(),
+            stats.opr_rank(), stats.opr_percentile()
+        ))
+        self.__connection.commit()
+
+    def get_team_year_stats(self, team_key: str, year: int,
+            cache_expiry: int) -> TeamYearStats | None:
+        '''Get the stats for a team in a given year'''
+        cursor = self.__connection.cursor()
+        cursor.execute('SELECT * FROM team_year_stats WHERE team_key = ? AND year = ?',
+                [team_key, year])
+        result = cursor.fetchone()
+        cursor.close()
+        if result is None:
+            return None
+        (
+            timestamp,
+            team, year,
+            elo_start, elo_pre_champs, elo_end,
+            elo_mean, elo_max, elo_diff,
+            opr, opr_auto, opr_teleop, opr_1, opr_2,
+            opr_endgame, opr_fouls, opr_no_fouls,
+            ils_1, ils_2,
+            wins, losses, ties, count,
+            winrate,
+            elo_rank, elo_percentile,
+            opr_rank, opr_percentile
+        ) = result
+        timestamp = datetime.fromisoformat(timestamp)
+        if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
+            self._delete_team_year_stats(team_key, year)
+            return None
+        return TeamYearStats(
+            team, year,
+            elo_start, elo_pre_champs, elo_end,
+            elo_mean, elo_max, elo_diff,
+            opr, opr_auto, opr_teleop, opr_1, opr_2,
+            opr_endgame, opr_fouls, opr_no_fouls,
+            ils_1, ils_2,
+            wins, losses, ties, count,
+            winrate,
+            elo_rank, elo_percentile,
+            opr_rank, opr_percentile
+        )
+
+    def _delete_team_year_stats(self, team_key: str, year: int) -> None:
+        self.__connection.execute('DELETE FROM team_year_stats WHERE team_key = ? AND year = ?',
                 [team_key, year])
         self.__connection.commit()
 
