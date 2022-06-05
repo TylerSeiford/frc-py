@@ -57,82 +57,8 @@ class FRCPy:
     def _stat_client(self) -> statbotics.Statbotics:
         return self.__statbotics_client
 
-    def _save(self,
-        data_type: str,
-        data: list[str] | Team | Event | Match | tuple[str, list[str]]
-            | tuple[str, list[int]] | tuple[str, int, list[str]] | tuple[str, str, list[str]]
-    ) -> None:
-        match(data_type):
-            case 'team_index':
-                if not isinstance(data, list[str]):
-                    raise TypeError('data must be a list of team keys')
-                self.__cache.save_team_index(data)
-            case 'team_years':
-                if not isinstance(data, tuple):
-                    raise TypeError('data must be a tuple')
-                if not isinstance(data[0], str):
-                    raise TypeError('data[0] must be a team key')
-                if not isinstance(data[1], list[int]):
-                    raise TypeError('data must be a list of years')
-                self.__cache.save_team_years(data[0], data[1])
-            case 'team':
-                if not isinstance(data, Team):
-                    raise TypeError('data must be a Team object')
-                self.__cache.save_team(data)
-            case 'team_year_events':
-                if not isinstance(data, tuple):
-                    raise TypeError('data must be a tuple')
-                if not isinstance(data[0], str):
-                    raise TypeError('data[0] must be a team key')
-                if not isinstance(data[1], int):
-                    raise TypeError('data[1] must be a year')
-                if not isinstance(data[2], list[str]):
-                    raise TypeError('data[2] must be a list of event keys')
-                self.__cache.save_team_year_events(data[0], data[1], data[2])
-            case 'year_events':
-                if not isinstance(data, tuple):
-                    raise TypeError('data must be a tuple')
-                if not isinstance(data[0], int):
-                    raise TypeError('data[0] must be a year')
-                if not isinstance(data[1], list[str]):
-                    raise TypeError('data[1] must be a list of event keys')
-                self.__cache.save_year_events(data[0], data[1])
-            case 'event':
-                if not isinstance(data, Event):
-                    raise TypeError('data must be an Event object')
-                self.__cache.save_event(data)
-            case 'event_teams':
-                if not isinstance(data, tuple):
-                    raise TypeError('data must be a tuple')
-                if not isinstance(data[0], str):
-                    raise TypeError('data[0] must be an event key')
-                if not isinstance(data[1], list[str]):
-                    raise TypeError('data[1] must be a list of team keys')
-                self.__cache.save_event_teams(data[0], data[1])
-            case 'event_matches':
-                if not isinstance(data, tuple):
-                    raise TypeError('data must be a tuple')
-                if not isinstance(data[0], str):
-                    raise TypeError('data[0] must be an event key')
-                if not isinstance(data[1], list[str]):
-                    raise TypeError('data[1] must be a list of match keys')
-                self.__cache.save_event_matches(data[0], data[1])
-            case 'team_event_matches':
-                if not isinstance(data, tuple):
-                    raise TypeError('data must be a tuple')
-                if not isinstance(data[0], str):
-                    raise TypeError('data[0] must be a team key')
-                if not isinstance(data[1], str):
-                    raise TypeError('data[1] must be an event key')
-                if not isinstance(data[2], list[str]):
-                    raise TypeError('data[2] must be a list of match keys')
-                self.__cache.save_team_event_matches(data[0], data[1], data[2])
-            case 'match':
-                if not isinstance(data, Match):
-                    raise TypeError('data must be a Match object')
-                self.__cache.save_match(data)
-            case _:
-                raise ValueError('Invalid data type')
+    def _cache(self) -> Cache:
+        return self.__cache
 
 
     def year_range(self) -> tuple[int, int]:
