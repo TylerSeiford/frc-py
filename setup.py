@@ -7,7 +7,7 @@ setup(
     url='https://github.com/TylerSeiford/frc-py',
     author='Tyler Seiford',
     license='GPLv3',
-    packages=['frc_py'],
+    packages=['frcpy'],
     install_requires=[
         'tbapy',
         'statbotics'
