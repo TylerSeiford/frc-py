@@ -3,7 +3,7 @@ Example on how to use the library.
 '''
 import json
 import os
-from frc_py import FRCPy
+from frcpy import FRCPy
 
 
 
