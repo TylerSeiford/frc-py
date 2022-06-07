@@ -32,6 +32,12 @@ if __name__ == '__main__':
         print(f"Website: {team.website()}")
         print(f"Rookie Year: {team.rookie_year()}")
         print(f"Motto: {team.motto()}")
+        print('- Precise location -')
+        location = api.team_precise_location(team)
+        print(f"Latitude/Longitude: {location.lat_lng()}")
+        print(f"Address: {location.address()}")
+        print(f"Place ID: {location.place_id()}")
+        print(f"Postal Code: {location.postal_code()}")
         for year in api.team_years('frc2501'):
             print(f"{year}: {api.team_year_events('frc2501', year)}")
 
@@ -47,17 +53,17 @@ if __name__ == '__main__':
         print(f"District: {event.district_key()}")
         print(f"Short Name: {event.short_name()}")
         print(f"Week: {event.week()}")
-        print(f"Address: {event.address()}")
-        print(f"Postal Code: {event.postal_code()}")
-        print(f"Google Maps Place ID: {event.gmaps_place_id()}")
-        print(f"Google Maps URL: {event.gmaps_url()}")
-        print(f"Latitude: {event.lat()}")
-        print(f"Longitude: {event.lng()}")
         print(f"Location Name: {event.location_name()}")
         print(f"Timezome: {event.timezone()}")
         print(f"Website: {event.website()}")
         print(f"First Event ID: {event.first_event_id()}")
         print(f"First Event Code: {event.first_event_code()}")
+        print('- Precise location -')
+        location = event.precise_location()
+        print(f"Latitude/Longitude: {location.lat_lng()}")
+        print(f"Address: {location.address()}")
+        print(f"Place ID: {location.place_id()}")
+        print(f"Postal Code: {location.postal_code()}")
         # Python doesn't automatically format each object in the list as a string
         webcasts = []
         for webcast in event.webcasts():
@@ -89,3 +95,9 @@ if __name__ == '__main__':
         for video in match.videos():
             videos.append(f"{video}")
         print(f"Videos: {videos}")
+
+        print('***** Team Stats *****')
+        stats = api.team_year_stats('frc2501', 2022)
+        print(f"OPR: {stats.opr()}")
+        print(f"Elo: {stats.elo_max()}")
+        print(f"Winrate: {stats.winrate()}")

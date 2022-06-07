@@ -32,6 +32,48 @@ class Location:
         return f"{self.__city, self.__state_prov, self.__country}"
 
 
+class PreciseLocation:
+    '''
+    Represents the precise location of a team or event.
+    '''
+    def __init__(self, location: Location, latitude: float, longitude: float,
+            address: str, postal_code: str | None, place_id: str):
+        self.__location = location
+        self.__latitude = latitude
+        self.__longitude = longitude
+        self.__address = address
+        self.__postal_code = postal_code
+        self.__place_id = place_id
+
+    def location(self) -> Location:
+        '''Returns the location of this precise location'''
+        return self.__location
+
+    def latitude(self) -> float:
+        '''Returns the latitude of this precise location'''
+        return self.__latitude
+
+    def longitude(self) -> float:
+        '''Returns the longitude of this precise location'''
+        return self.__longitude
+
+    def address(self) -> str:
+        '''Returns the address of this team'''
+        return self.__address
+
+    def postal_code(self) -> str | None:
+        '''Returns the postal code of this precise location'''
+        return self.__postal_code
+
+    def place_id(self) -> str:
+        '''Returns the place ID of this team'''
+        return self.__place_id
+
+    def lat_lng(self) -> tuple[float, float]:
+        '''Returns a tuple of latitude and longitude of this precise location'''
+        return self.__latitude, self.__longitude
+
+
 class Team:
     '''
     Represents a team
@@ -290,8 +332,7 @@ class Event:
 
     def __init__(self, key: str, name: str, location: Location, event_type: int,
             dates: tuple[str, str], district_key: str, short_name: str, week: int,
-            address: str, postal_code: str, gmaps_place_id: str, gmaps_url: str,
-            lat: float, lng: float, location_name: str, timezone: str,
+            precise_location: PreciseLocation, location_name: str, timezone: str,
             website: str, first_event_id: str, first_event_code: str,
             webcasts: list[Webcast], divisions: list[str],
             parent_event_key: str, playoff_type: int):
@@ -303,13 +344,8 @@ class Event:
         self.__district_key = district_key
         self.__short_name = short_name
         self.__week = week
-        self.__address = address
-        self.__postal_code = postal_code
-        self.__gmaps_place_id = gmaps_place_id
-        self.__gmaps_url = gmaps_url
-        self.__lat = lat
-        self.__lng = lng
         self.__location_name = location_name
+        self.__precise_location = precise_location
         self.__timezone = timezone
         self.__website = website
         self.__first_event_id = first_event_id
@@ -415,33 +451,13 @@ class Event:
         '''Returns the week of this event'''
         return self.__week
 
-    def address(self) -> str:
-        '''Returns the address of this event'''
-        return self.__address
-
-    def postal_code(self) -> str:
-        '''Returns the postal code of this event'''
-        return self.__postal_code
-
-    def gmaps_place_id(self) -> str:
-        '''Returns the Google Maps Place ID of this event'''
-        return self.__gmaps_place_id
-
-    def gmaps_url(self) -> str:
-        '''Returns the Google Maps URL of this event'''
-        return self.__gmaps_url
-
-    def lat(self) -> float:
-        '''Returns the latitude of this event'''
-        return self.__lat
-
-    def lng(self) -> float:
-        '''Returns the longitude of this event'''
-        return self.__lng
-
     def location_name(self) -> str:
         '''Returns the location name of this event'''
         return self.__location_name
+
+    def precise_location(self) -> PreciseLocation:
+        '''Returns the precise location of this event'''
+        return self.__precise_location
 
     def timezone(self) -> str:
         '''Returns the timezone of this event'''

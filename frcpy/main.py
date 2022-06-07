@@ -5,7 +5,7 @@ from datetime import datetime
 import googlemaps
 import tbapy
 import statbotics
-from .models import Location, Team, TeamYearStats, Webcast, Event, MatchAlliance, MatchVideo, Match
+from .models import Location, PreciseLocation, Team, TeamYearStats, Webcast, Event, MatchAlliance, MatchVideo, Match
 from .cache import Cache
 
 
@@ -69,6 +69,7 @@ class FRCPy:
         return self.__cache
 
 
+    # The Blue Alliance API provided data
     def year_range(self) -> tuple[int, int]:
         '''Get the year range of events (uncached)'''
         status = self.__tba_client.status()
@@ -137,51 +138,6 @@ class FRCPy:
             self.__cache.save_team_year_events(team, year, events)
         return events
 
-    def team_year_stats(self, team: str, year: int, cached: bool = True,
-            cache_expiry: int = 90) -> dict:
-        '''Get the stats for a team in a year'''
-        if cached:
-            stats = self.__cache.get_team_year_stats(team, year, cache_expiry)
-            if stats is not None:
-                return stats
-        stats = self.__statbotics_client.get_team_year(
-            Team.team_key_to_number(team), year
-        )
-        elo_start = stats['elo_start']
-        elo_pre_champs = stats['elo_pre_champs']
-        elo_end = stats['elo_end']
-        elo_mean = stats['elo_mean']
-        elo_max = stats['elo_max']
-        elo_diff = stats['elo_diff']
-        opr = stats['opr']
-        opr_auto = stats['opr_auto']
-        opr_teleop = stats['opr_teleop']
-        opr_1 = stats['opr_1']
-        opr_2 = stats['opr_2']
-        opr_endgame = stats['opr_endgame']
-        opr_fouls = stats['opr_fouls']
-        opr_no_fouls = stats['opr_no_fouls']
-        ils_1 = stats['ils_1']
-        ils_2 = stats['ils_2']
-        wins = stats['wins']
-        losses = stats['losses']
-        ties = stats['ties']
-        count = stats['count']
-        winrate = stats['winrate']
-        elo_rank = stats['elo_rank']
-        elo_percentile = stats['elo_percentile']
-        opr_rank = stats['opr_rank']
-        opr_percentile = stats['opr_percentile']
-        stats = TeamYearStats(
-            team, year, elo_start, elo_pre_champs, elo_end, elo_mean, elo_max,
-            elo_diff, opr, opr_auto, opr_teleop, opr_1, opr_2, opr_endgame,
-            opr_fouls, opr_no_fouls, ils_1, ils_2, wins, losses, ties, count,
-            winrate, elo_rank, elo_percentile, opr_rank, opr_percentile
-        )
-        if cached:
-            self.__cache.save_team_year_stats(team, year, stats)
-        return stats
-
     def year_events(self, year: int, cached: bool = True, cache_expiry: int = 90) -> list[str]:
         '''Get all the events in a year'''
         if cached:
@@ -214,13 +170,16 @@ class FRCPy:
             except KeyError:
                 file = None
             webcasts.append(Webcast(webcast['type'], webcast['channel'], date, file))
+        location = Location(event.city, event.state_prov, event.country)
+        precise_location = PreciseLocation(location, event.lat, event.lng,
+                event.address, event.postal_code, event.gmaps_place_id)
         event = Event(
-            key, event.name, Location(event.city, event.state_prov, event.country),
-            event.event_type, (event.start_date, event.end_date), district, event.short_name,
-            event.week, event.address, event.postal_code, event.gmaps_place_id, event.gmaps_url,
-            event.lat, event.lng, event.location_name, event.timezone,
+            key, event.name, location, event.event_type,
+            (event.start_date, event.end_date), district, event.short_name, event.week,
+            precise_location, event.location_name, event.timezone,
             event.website, event.first_event_id, event.first_event_code,
-            webcasts, event.division_keys, event.parent_event_key, event.playoff_type
+            webcasts, event.division_keys,
+            event.parent_event_key, event.playoff_type
         )
         if cached:
             self.__cache.save_event(event)
@@ -308,3 +267,79 @@ class FRCPy:
         if cached:
             self.__cache.save_match(match)
         return match
+
+
+    # Statbotics API provided data
+    def team_year_stats(self, team: str, year: int, cached: bool = True,
+            cache_expiry: int = 90) -> TeamYearStats:
+        '''Get the stats for a team in a year'''
+        if cached:
+            stats = self.__cache.get_team_year_stats(team, year, cache_expiry)
+            if stats is not None:
+                return stats
+        stats = self.__statbotics_client.get_team_year(
+            Team.team_key_to_number(team), year
+        )
+        elo_start = stats['elo_start']
+        elo_pre_champs = stats['elo_pre_champs']
+        elo_end = stats['elo_end']
+        elo_mean = stats['elo_mean']
+        elo_max = stats['elo_max']
+        elo_diff = stats['elo_diff']
+        opr = stats['opr']
+        opr_auto = stats['opr_auto']
+        opr_teleop = stats['opr_teleop']
+        opr_1 = stats['opr_1']
+        opr_2 = stats['opr_2']
+        opr_endgame = stats['opr_endgame']
+        opr_fouls = stats['opr_fouls']
+        opr_no_fouls = stats['opr_no_fouls']
+        ils_1 = stats['ils_1']
+        ils_2 = stats['ils_2']
+        wins = stats['wins']
+        losses = stats['losses']
+        ties = stats['ties']
+        count = stats['count']
+        winrate = stats['winrate']
+        elo_rank = stats['elo_rank']
+        elo_percentile = stats['elo_percentile']
+        opr_rank = stats['opr_rank']
+        opr_percentile = stats['opr_percentile']
+        stats = TeamYearStats(
+            team, year, elo_start, elo_pre_champs, elo_end, elo_mean, elo_max,
+            elo_diff, opr, opr_auto, opr_teleop, opr_1, opr_2, opr_endgame,
+            opr_fouls, opr_no_fouls, ils_1, ils_2, wins, losses, ties, count,
+            winrate, elo_rank, elo_percentile, opr_rank, opr_percentile
+        )
+        if cached:
+            self.__cache.save_team_year_stats(team, year, stats)
+        return stats
+
+
+    # Google Maps API provided data
+    def team_precise_location(self, team: Team, cached: bool = True,
+            cache_expiry: int = 360) -> PreciseLocation | None:
+        if self.__gmaps_client is None:
+            return None
+        if cached:
+            data = self.__cache.get_team_precise_location(team.key(), cache_expiry)
+            if data is not None:
+                return data
+        school = team.school_name()
+        location = team.location()
+        state_prov = location.state_prov()
+        country = location.country()
+        geocoded = self.__gmaps_client.geocode(f"{school}, {state_prov}, {country}")
+        lat = geocoded[0]['geometry']['location']['lat']
+        lng = geocoded[0]['geometry']['location']['lng']
+        address = geocoded[0]['formatted_address']
+        postal_code = None
+        for component in geocoded[0]['address_components']:
+            if 'postal_code' in component['types']:
+                postal_code = component['long_name']
+                break
+        place_id = geocoded[0]['place_id']
+        data = PreciseLocation(location, lat, lng, address, postal_code, place_id)
+        if cached:
+            self.__cache.save_team_precise_location(team.key(), data)
+        return data
