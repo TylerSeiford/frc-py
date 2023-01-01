@@ -317,19 +317,8 @@ class FRCPy:
 
 
     # Google Maps API provided data
-    def team_precise_location(self, team: Team, cached: bool = True,
-            cache_expiry: int = 360) -> PreciseLocation | None:
-        if self.__gmaps_client is None:
-            return None
-        if cached:
-            data = self.__cache.get_team_precise_location(team.key(), cache_expiry)
-            if data is not None:
-                return data
-        school = team.school_name()
-        location = team.location()
-        state_prov = location.state_prov()
-        country = location.country()
-        geocoded = self.__gmaps_client.geocode(f"{school}, {state_prov}, {country}")
+    def _geocode(self, string: str) -> tuple[float, float, str, str, str] | None:
+        geocoded = self.__gmaps_client.geocode(string)
         lat = geocoded[0]['geometry']['location']['lat']
         lng = geocoded[0]['geometry']['location']['lng']
         address = geocoded[0]['formatted_address']
@@ -339,7 +328,88 @@ class FRCPy:
                 postal_code = component['long_name']
                 break
         place_id = geocoded[0]['place_id']
-        data = PreciseLocation(location, lat, lng, address, postal_code, place_id)
+        return lat, lng, address, postal_code, place_id
+
+    def __team_school(self, team: Team) -> PreciseLocation | None:
+        school = team.school_name()
+        location = team.location()
+        state_prov = location.state_prov()
+        country = location.country()
+
+        result = self._geocode(f"{school}, {state_prov}, {country}")
+        if result is None:
+            return None
+        lat, lng, address, postal_code, place_id = result
+        if postal_code is None:
+            return None
+        return PreciseLocation(location, lat, lng, address, postal_code, place_id)
+
+    def __team_high_school(self, team: Team) -> PreciseLocation | None:
+        location = team.location()
+        city = location.city()
+        state_prov = location.state_prov()
+        country = location.country()
+
+        result = self._geocode(f"{city} High School, {state_prov}, {country}")
+        if result is None:
+            return None
+        lat, lng, address, postal_code, place_id = result
+        if postal_code is None:
+            return None
+        return PreciseLocation(location, lat, lng, address, postal_code, place_id)
+
+    def __team_city(self, team: Team) -> PreciseLocation | None:
+        location = team.location()
+        city = location.city()
+        state_prov = location.state_prov()
+        country = location.country()
+
+        result = self._geocode(f"{city}, {state_prov}, {country}")
+        if result is None:
+            return None
+        lat, lng, address, postal_code, place_id = result
+        return PreciseLocation(location, lat, lng, address, postal_code, place_id)
+
+    def team_precise_location(self, team: Team, cached: bool = True,
+            cache_expiry: int = 360) -> PreciseLocation | None:
+        '''Attempt to get a precise google-maps location for a team'''
+        if self.__gmaps_client is None:
+            return None
+        if cached:
+            data = self.__cache.get_team_precise_location(team.key(), cache_expiry)
+            if data is not None and data.postal_code() is not None:
+                return data
+
+        data = self.__team_school(team)
+        if data is None:
+            data = self.__team_high_school(team)
+        if data is None:
+            data = self.__team_city(team)
         if cached:
             self.__cache.save_team_precise_location(team.key(), data)
         return data
+
+    def precise_distance(self, origin: PreciseLocation, destination: PreciseLocation,
+            cached: bool = True, cache_expiry: int = 1800) -> float | None:
+        '''Get a precise google-maps distance between two precise locations'''
+        if self.__gmaps_client is None:
+            return None
+        if cached:
+            data = self.__cache.get_precise_distance(
+                origin.place_id(),
+                destination.place_id(),
+                cache_expiry
+            )
+            if data is not None:
+                return data
+        distance_matrix = self.__gmaps_client.distance_matrix(
+            f"place_id:{origin.place_id()}",
+            f"place_id:{destination.place_id()}"
+        )
+        data = distance_matrix['rows'][0]['elements'][0]
+        if data['status'] == 'ZERO_RESULTS':
+            return None
+        meters = data['distance']['value']
+        if cached:
+            self.__cache.save_precise_distance(origin.place_id(), destination.place_id(), meters)
+        return meters

@@ -29,12 +29,16 @@ class Cache:
         self.__init_match()
         self.__init_team_year_stats()
         self.__init_team_precise_locations()
+        self.__init_precise_distances()
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.__connection.close()
+
+    def _connection(self) -> sqlite3.Connection:
+        return self.__connection
 
 
     def __init_team_index(self) -> None:
@@ -672,4 +676,48 @@ class Cache:
     def _delete_team_precise_location(self, team_key: str) -> None:
         self.__connection.execute('DELETE FROM team_precise_locations WHERE team_key = ?',
                 [team_key])
+        self.__connection.commit()
+
+
+    def __init_precise_distances(self) -> None:
+        self.__connection.execute('''CREATE TABLE IF NOT EXISTS precise_distances (
+            last_updated datetime,
+            origin_id text, destination_id text,
+            distance float
+        )''')
+        self.__connection.commit()
+
+    def save_precise_distance(self, origin_id: str, destination_id: str, meters: float) -> None:
+        '''Save the precise distance for a pair of IDs'''
+        self._delete_precise_distances(origin_id, destination_id)
+        self.__connection.execute('INSERT into precise_distances VALUES (?, ?, ?, ?)', (
+            datetime.utcnow().isoformat(),
+            origin_id, destination_id,
+            meters
+        ))
+        self.__connection.commit()
+
+    def get_precise_distance(self, origin_id: str, destination_id: str, cache_expiry: int
+            ) -> float | None:
+        '''Get the precise distance for two IDs'''
+        cursor = self.__connection.cursor()
+        cursor.execute('SELECT * FROM precise_distances WHERE origin_id = ? AND destination_id = ?',
+            [origin_id, destination_id])
+        result = cursor.fetchone()
+        cursor.close()
+        if result is None:
+            return None
+        (
+            timestamp, _, _, meters
+        ) = result
+        timestamp = datetime.fromisoformat(timestamp)
+        if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
+            self._delete_precise_distances(origin_id, destination_id)
+            return None
+        return meters
+
+    def _delete_precise_distances(self, origin_id: str, destination_id: str) -> None:
+        self.__connection.execute(
+            'DELETE FROM precise_distances WHERE origin_id = ? AND destination_id = ?',
+            [origin_id, destination_id])
         self.__connection.commit()
