@@ -23,8 +23,8 @@ if __name__ == '__main__':
         print('***** Teams *****')
         teams: list[str] = api.teams()
         print(f"Found {len(teams)} teams")
-        print(f"Years: {api.team_years('frc2501')}")
-        team = api.team('frc2501')
+        print(f"Years: {api.team_years('frc2846')}")
+        team = api.team('frc2846')
         print(f"Location: {team.location()}")
         print(f"Nickname: {team.nickname()}")
         print(f"Name: {team.name()}")
@@ -38,8 +38,8 @@ if __name__ == '__main__':
         print(f"Address: {location.address()}")
         print(f"Place ID: {location.place_id()}")
         print(f"Postal Code: {location.postal_code()}")
-        for year in api.team_years('frc2501'):
-            print(f"{year}: {api.team_year_events('frc2501', year)}")
+        for year in api.team_years('frc2846'):
+            print(f"{year}: {api.team_year_events('frc2846', year)}")
 
         print('***** Events *****')
         min_year, max_year = api.year_range()
@@ -76,7 +76,7 @@ if __name__ == '__main__':
         print(f"Matches: {len(api.event_matches('2022mndu'))}")
 
         print('***** Team @ Event *****')
-        print(f"Matches: {len(api.team_event_matches('frc2501', '2022mndu'))}")
+        print(f"Matches: {len(api.team_event_matches('frc2846', '2022mndu'))}")
 
         print('***** Matches *****')
         match = api.match('2022mndu_qm48')
@@ -96,8 +96,8 @@ if __name__ == '__main__':
             videos.append(f"{video}")
         print(f"Videos: {videos}")
 
-        print('***** Team Stats *****')
-        stats = api.team_year_stats('frc2501', 2022)
-        print(f"OPR: {stats.opr()}")
-        print(f"Elo: {stats.elo_max()}")
-        print(f"Winrate: {stats.winrate()}")
+        # print('***** Team Stats *****')
+        # stats = api.team_year_stats('frc2846', 2022)
+        # print(f"OPR: {stats.opr()}")
+        # print(f"Elo: {stats.elo_max()}")
+        # print(f"Winrate: {stats.winrate()}")
