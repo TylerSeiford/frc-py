@@ -133,43 +133,58 @@ class TeamYearStats:
     Represents a team's statistics for a single year
     '''
     def __init__(self, team_key: str, year: int,
-            elo_start: float, elo_pre_champs: float, elo_end: float,
-            elo_mean: float, elo_max: float, elo_diff: float,
-            opr: float, opr_auto: float, opr_teleop: float, opr_1: float, opr_2: float,
-            opr_endgame: float, opr_fouls: float, opr_no_fouls: float,
-            ils_1: float, ils_2: float,
-            wins: int, losses: int, ties: int, count: int,
-            winrate: float,
-            elo_rank: int, elo_percentile: float,
-            opr_rank: int, opr_percentile: float
+            epa_start: float, epa_pre_champs: float, epa_end: float,
+            epa_mean: float, epa_max: float, epa_diff: float,
+            auto_epa_start: float, auto_epa_pre_champs: float, auto_epa_end: float, auto_epa_mean: float, auto_epa_max: float,
+            teleop_epa_start: float, teleop_epa_pre_champs: float, teleop_epa_end: float, teleop_epa_mean: float, teleop_epa_max: float,
+            endgame_epa_start: float, endgame_epa_pre_champs: float, endgame_epa_end: float, endgame_epa_mean: float, endgame_epa_max: float,
+            rp_1_epa_start: float, rp_1_epa_pre_champs: float, rp_1_epa_end: float, rp_1_epa_mean: float, rp_1_epa_max: float,
+            rp_2_epa_start: float, rp_2_epa_pre_champs: float, rp_2_epa_end: float, rp_2_epa_mean: float, rp_2_epa_max: float,
+            norm_epa_end: float,
+            wins: int, losses: int, ties: int, count: int, winrate: float,
+            epa_rank: float, epa_percent: float
     ) -> None:
         self.__team_key = team_key
         self.__year = year
-        self.__elo_start = elo_start
-        self.__elo_pre_champs = elo_pre_champs
-        self.__elo_end = elo_end
-        self.__elo_mean = elo_mean
-        self.__elo_max = elo_max
-        self.__elo_diff = elo_diff
-        self.__opr = opr
-        self.__opr_auto = opr_auto
-        self.__opr_teleop = opr_teleop
-        self.__opr_1 = opr_1
-        self.__opr_2 = opr_2
-        self.__opr_endgame = opr_endgame
-        self.__opr_fouls = opr_fouls
-        self.__opr_no_fouls = opr_no_fouls
-        self.__ils_1 = ils_1
-        self.__ils_2 = ils_2
+        self.__epa_start = epa_start
+        self.__epa_pre_champs = epa_pre_champs
+        self.__epa_end = epa_end
+        self.__epa_mean = epa_mean
+        self.__epa_max = epa_max
+        self.__epa_diff = epa_diff
+        self.__auto_epa_start = auto_epa_start
+        self.__auto_epa_pre_champs = auto_epa_pre_champs
+        self.__auto_epa_end = auto_epa_end
+        self.__auto_epa_mean = auto_epa_mean
+        self.__auto_epa_max = auto_epa_max
+        self.__teleop_epa_start = teleop_epa_start
+        self.__teleop_epa_pre_champs = teleop_epa_pre_champs
+        self.__teleop_epa_end = teleop_epa_end
+        self.__teleop_epa_mean = teleop_epa_mean
+        self.__teleop_epa_max = teleop_epa_max
+        self.__endgame_epa_start = endgame_epa_start
+        self.__endgame_epa_pre_champs = endgame_epa_pre_champs
+        self.__endgame_epa_end = endgame_epa_end
+        self.__endgame_epa_mean = endgame_epa_mean
+        self.__endgame_epa_max = endgame_epa_max
+        self.__rp_1_epa_start = rp_1_epa_start
+        self.__rp_1_epa_pre_champs = rp_1_epa_pre_champs
+        self.__rp_1_epa_end = rp_1_epa_end
+        self.__rp_1_epa_mean = rp_1_epa_mean
+        self.__rp_1_epa_max = rp_1_epa_max
+        self.__rp_2_epa_start = rp_2_epa_start
+        self.__rp_2_epa_pre_champs = rp_2_epa_pre_champs
+        self.__rp_2_epa_end = rp_2_epa_end
+        self.__rp_2_epa_mean = rp_2_epa_mean
+        self.__rp_2_epa_max = rp_2_epa_max
+        self.__norm_epa_end = norm_epa_end
         self.__wins = wins
         self.__losses = losses
         self.__ties = ties
         self.__count = count
         self.__winrate = winrate
-        self.__elo_rank = elo_rank
-        self.__elo_percentile = elo_percentile
-        self.__opr_rank = opr_rank
-        self.__opr_percentile = opr_percentile
+        self.__epa_rank = epa_rank
+        self.__epa_percent = epa_percent
 
     def team_key(self) -> str:
         '''Returns the key of this team'''
@@ -179,69 +194,101 @@ class TeamYearStats:
         '''Returns the year of this team'''
         return self.__year
 
-    def elo_start(self) -> float:
-        '''Returns the starting elo of this team'''
-        return self.__elo_start
+    def epa_start(self) -> float:
+        return self.__epa_start
 
-    def elo_pre_champs(self) -> float:
-        '''Returns the elo before the championship of this team'''
-        return self.__elo_pre_champs
+    def epa_pre_champs(self) -> float:
+        return self.__epa_pre_champs
 
-    def elo_end(self) -> float:
-        '''Returns the ending elo of this team'''
-        return self.__elo_end
+    def epa_end(self) -> float:
+        return self.__epa_end
 
-    def elo_mean(self) -> float:
-        '''Returns the mean elo of this team'''
-        return self.__elo_mean
+    def epa_mean(self) -> float:
+        return self.__epa_mean
 
-    def elo_max(self) -> float:
-        '''Returns the max elo of this team'''
-        return self.__elo_max
+    def epa_max(self) -> float:
+        return self.__epa_max
 
-    def elo_diff(self) -> float:
-        '''Returns the elo difference of this team'''
-        return self.__elo_diff
+    def epa_diff(self) -> float:
+        return self.__epa_diff
 
-    def opr(self) -> float:
-        '''Returns the opr of this team'''
-        return self.__opr
+    def auto_epa_start(self) -> float:
+        return self.__auto_epa_start
 
-    def opr_auto(self) -> float:
-        '''Returns the opr auto of this team'''
-        return self.__opr_auto
+    def auto_epa_pre_champs(self) -> float:
+        return self.__auto_epa_pre_champs
 
-    def opr_teleop(self) -> float:
-        '''Returns the opr teleop of this team'''
-        return self.__opr_teleop
+    def auto_epa_end(self) -> float:
+        return self.__auto_epa_end
 
-    def opr_1(self) -> float:
-        '''Returns the opr 1 of this team'''
-        return self.__opr_1
+    def auto_epa_mean(self) -> float:
+        return self.__auto_epa_mean
 
-    def opr_2(self) -> float:
-        '''Returns the opr 2 of this team'''
-        return self.__opr_2
+    def auto_epa_max(self) -> float:
+        return self.__auto_epa_max
 
-    def opr_endgame(self) -> float:
-        '''Returns the opr endgame of this team'''
-        return self.__opr_endgame
+    def teleop_epa_start(self) -> float:
+        return self.__teleop_epa_start
 
-    def opr_fouls(self) -> float:
-        '''Returns the opr fouls of this team'''
-        return self.__opr_fouls
+    def teleop_epa_pre_champs(self) -> float:
+        return self.__teleop_epa_pre_champs
 
-    def opr_no_fouls(self) -> float:
-        '''Returns the opr no fouls of this team'''
-        return self.__opr_no_fouls
+    def teleop_epa_end(self) -> float:
+        return self.__teleop_epa_end
 
-    def ils_1(self) -> float:
-        '''Returns the ils 1 of this team'''
-        return self.__ils_1
+    def teleop_epa_mean(self) -> float:
+        return self.__teleop_epa_mean
 
-    def ils_2(self) -> float:
-        '''Returns the ils 2 of this team'''
-        return self.__ils_2
+    def teleop_epa_max(self) -> float:
+        return self.__teleop_epa_max
+
+    def endgame_epa_start(self) -> float:
+        return self.__endgame_epa_start
+
+    def endgame_epa_pre_champs(self) -> float:
+        return self.__endgame_epa_pre_champs
+
+    def endgame_epa_end(self) -> float:
+        return self.__endgame_epa_end
+
+    def endgame_epa_mean(self) -> float:
+        return self.__endgame_epa_mean
+
+    def endgame_epa_max(self) -> float:
+        return self.__endgame_epa_max
+
+    def rp_1_epa_start(self) -> float:
+        return self.__rp_1_epa_start
+
+    def rp_1_epa_pre_champs(self) -> float:
+        return self.__rp_1_epa_pre_champs
+
+    def rp_1_epa_end(self) -> float:
+        return self.__rp_1_epa_end
+
+    def rp_1_epa_mean(self) -> float:
+        return self.__rp_1_epa_mean
+
+    def rp_1_epa_max(self) -> float:
+        return self.__rp_1_epa_max
+
+    def rp_2_epa_start(self) -> float:
+        return self.__rp_2_epa_start
+
+    def rp_2_epa_pre_champs(self) -> float:
+        return self.__rp_2_epa_pre_champs
+
+    def rp_2_epa_end(self) -> float:
+        return self.__rp_2_epa_end
+
+    def rp_2_epa_mean(self) -> float:
+        return self.__rp_2_epa_mean
+
+    def rp_2_epa_max(self) -> float:
+        return self.__rp_2_epa_max
+
+    def norm_epa_end(self) -> float:
+        return self.__norm_epa_end
 
     def wins(self) -> int:
         '''Returns the wins of this team'''
@@ -263,21 +310,11 @@ class TeamYearStats:
         '''Returns the winrate of this team'''
         return self.__winrate
 
-    def elo_rank(self) -> int:
-        '''Returns the elo rank of this team'''
-        return self.__elo_rank
+    def epa_rank(self) -> float:
+        return self.__epa_rank
 
-    def elo_percentile(self) -> float:
-        '''Returns the elo percentile of this team'''
-        return self.__elo_percentile
-
-    def opr_rank(self) -> int:
-        '''Returns the opr rank of this team'''
-        return self.__opr_rank
-
-    def opr_percentile(self) -> float:
-        '''Returns the opr percentile of this team'''
-        return self.__opr_percentile
+    def epa_percent(self) -> float:
+        return self.__epa_percent
 
 
 class Webcast:
