@@ -280,36 +280,59 @@ class FRCPy:
         stats = self.__statbotics_client.get_team_year(
             Team.team_key_to_number(team), year
         )
-        elo_start = stats['elo_start']
-        elo_pre_champs = stats['elo_pre_champs']
-        elo_end = stats['elo_end']
-        elo_mean = stats['elo_mean']
-        elo_max = stats['elo_max']
-        elo_diff = stats['elo_diff']
-        opr = stats['opr']
-        opr_auto = stats['opr_auto']
-        opr_teleop = stats['opr_teleop']
-        opr_1 = stats['opr_1']
-        opr_2 = stats['opr_2']
-        opr_endgame = stats['opr_endgame']
-        opr_fouls = stats['opr_fouls']
-        opr_no_fouls = stats['opr_no_fouls']
-        ils_1 = stats['ils_1']
-        ils_2 = stats['ils_2']
+
+        epa_start = stats['epa_start']
+        epa_pre_champs = stats['epa_pre_champs']
+        epa_end = stats['epa_end']
+        epa_mean = stats['epa_mean']
+        epa_max = stats['epa_max']
+        epa_diff = stats['epa_diff']
+        auto_epa_start = stats['auto_epa_start']
+        auto_epa_pre_champs = stats['auto_epa_pre_champs']
+        auto_epa_end = stats['auto_epa_end']
+        auto_epa_mean = stats['auto_epa_mean']
+        auto_epa_max = stats['auto_epa_max']
+        teleop_epa_start = stats['teleop_epa_start']
+        teleop_epa_pre_champs = stats['teleop_epa_pre_champs']
+        teleop_epa_end = stats['teleop_epa_end']
+        teleop_epa_mean = stats['teleop_epa_mean']
+        teleop_epa_max = stats['teleop_epa_max']
+        endgame_epa_start = stats['endgame_epa_start']
+        endgame_epa_pre_champs = stats['endgame_epa_pre_champs']
+        endgame_epa_end = stats['endgame_epa_end']
+        endgame_epa_mean = stats['endgame_epa_mean']
+        endgame_epa_max = stats['endgame_epa_max']
+        rp_1_epa_start = stats['rp_1_epa_start']
+        rp_1_epa_pre_champs = stats['rp_1_epa_pre_champs']
+        rp_1_epa_end = stats['rp_1_epa_end']
+        rp_1_epa_mean = stats['rp_1_epa_mean']
+        rp_1_epa_max = stats['rp_1_epa_max']
+        rp_2_epa_start = stats['rp_2_epa_start']
+        rp_2_epa_pre_champs = stats['rp_2_epa_pre_champs']
+        rp_2_epa_end = stats['rp_2_epa_end']
+        rp_2_epa_mean = stats['rp_2_epa_mean']
+        rp_2_epa_max = stats['rp_2_epa_max']
+        norm_epa_end = stats['norm_epa_end']
         wins = stats['wins']
         losses = stats['losses']
         ties = stats['ties']
         count = stats['count']
         winrate = stats['winrate']
-        elo_rank = stats['elo_rank']
-        elo_percentile = stats['elo_percentile']
-        opr_rank = stats['opr_rank']
-        opr_percentile = stats['opr_percentile']
+        epa_rank = stats['total_epa_rank']
+        epa_percent = stats['total_epa_percentile']
+
+
         stats = TeamYearStats(
-            team, year, elo_start, elo_pre_champs, elo_end, elo_mean, elo_max,
-            elo_diff, opr, opr_auto, opr_teleop, opr_1, opr_2, opr_endgame,
-            opr_fouls, opr_no_fouls, ils_1, ils_2, wins, losses, ties, count,
-            winrate, elo_rank, elo_percentile, opr_rank, opr_percentile
+            team, year,
+            epa_start, epa_pre_champs, epa_end, epa_mean, epa_max, epa_diff,
+            auto_epa_start, auto_epa_pre_champs, auto_epa_end, auto_epa_mean, auto_epa_max,
+            teleop_epa_start, teleop_epa_pre_champs, teleop_epa_end, teleop_epa_mean, teleop_epa_max,
+            endgame_epa_start, endgame_epa_pre_champs, endgame_epa_end, endgame_epa_mean, endgame_epa_max,
+            rp_1_epa_start, rp_1_epa_pre_champs, rp_1_epa_end, rp_1_epa_mean, rp_1_epa_max,
+            rp_2_epa_start, rp_2_epa_pre_champs, rp_2_epa_end, rp_2_epa_mean, rp_2_epa_max,
+            norm_epa_end,
+            wins, losses, ties, count, winrate,
+            epa_rank, epa_percent
         )
         if cached:
             self.__cache.save_team_year_stats(team, year, stats)

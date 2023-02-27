@@ -535,6 +535,7 @@ class Cache:
 
 
     def __init_team_year_stats(self) -> None:
+        return # Disable
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS team_year_stats (
             last_updated datetime,
             team_key text, year int,
@@ -552,6 +553,7 @@ class Cache:
 
     def save_team_year_stats(self, team_key: str, year: int, stats: TeamYearStats) -> None:
         '''Save the stats for a team in a given year'''
+        return # Disable save
         self._delete_team_year_stats(team_key, year)
         self.__connection.execute('INSERT INTO team_year_stats VALUES (?, ?, ?, ?, ?, ?, ?, ?, '
             '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
@@ -572,6 +574,7 @@ class Cache:
     def get_team_year_stats(self, team_key: str, year: int,
             cache_expiry: int) -> TeamYearStats | None:
         '''Get the stats for a team in a given year'''
+        return None # Disable load
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM team_year_stats WHERE team_key = ? AND year = ?',
                 [team_key, year])
