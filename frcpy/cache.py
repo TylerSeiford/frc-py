@@ -482,8 +482,8 @@ class Cache:
             match.red_score(), match.blue_score(),
             match.red_teams().to_json(), match.blue_teams().to_json(),
             match.winner(),
-            match.schedule_time(), match.predicted_time(),
-            match.actual_time(), match.result_time(),
+            match.schedule_time().isoformat(), match.predicted_time().isoformat(),
+            match.actual_time().isoformat(), match.result_time().isoformat(),
             json.dumps(videos)
         ))
         self.__connection.commit()
@@ -510,6 +510,10 @@ class Cache:
         red_teams = MatchAlliance(red_teams['teams'], red_teams['dq'], red_teams['surrogate'])
         blue_teams = json.loads(blue_teams)
         blue_teams = MatchAlliance(blue_teams['teams'], blue_teams['dq'], blue_teams['surrogate'])
+        scheduled_time = datetime.fromisoformat(scheduled_time)
+        predicted_time = datetime.fromisoformat(predicted_time)
+        actual_time = datetime.fromisoformat(actual_time)
+        result_time = datetime.fromisoformat(result_time)
         raw_videos = json.loads(raw_videos)
         videos = []
         for video in raw_videos:
