@@ -271,7 +271,7 @@ class Cache:
             event.key(), Event.event_key_to_year(event.key()), event.name(),
             location.city(), location.state_prov(), location.country(),
             event.event_type(),
-            start, end,
+            start.isoformat(), end.isoformat(),
             event.district_key(),
             event.short_name(), event.week(),
             precise_location.address(), precise_location.postal_code(),
@@ -310,6 +310,8 @@ class Cache:
         if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
             self._delete_event(event_key)
             return None
+        start = datetime.fromisoformat(start)
+        end = datetime.fromisoformat(end)
         location = Location(city, state_prov, country)
         precise_location = PreciseLocation(
             location, lat, lng,
