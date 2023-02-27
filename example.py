@@ -103,4 +103,4 @@ if __name__ == '__main__':
         print(f"Auto EPA: {stats.auto_epa_max()}")
         print(f"Teleop EPA: {stats.teleop_epa_max()}")
         print(f"Endgame EPA: {stats.endgame_epa_max()}")
-        print(f"Winrate: {stats.winrate() * 100:.2f}%")
+        print(f"Win Rate: {stats.winrate() * 100:.2f}%")

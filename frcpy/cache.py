@@ -535,46 +535,53 @@ class Cache:
 
 
     def __init_team_year_stats(self) -> None:
-        return # Disable
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS team_year_stats (
             last_updated datetime,
             team_key text, year int,
-            elo_start float, elo_pre_champs float, elo_end float,
-            elo_mean float, elo_max float, elo_diff float,
-            opr float, opr_auto float, opr_teleop float, opr_1 float, opr_2 float,
-            opr_endgame float, opr_foul float, opr_no_fouls float,
-            ils_1 float, ils_2 float,
-            wins int, losses int, ties int, count int,
-            winrate float,
-            elo_rank int, elo_percentile float,
-            opr_rank int, opr_percentile float
+            epa_start float, epa_pre_champs float, epa_end float, epa_mean float, epa_max float, epa_diff float,
+            auto_epa_start float, auto_epa_pre_champs float, auto_epa_end float, auto_epa_mean float, auto_epa_max float,
+            teleop_epa_start float, teleop_epa_pre_champs float, teleop_epa_end float, teleop_epa_mean float, teleop_epa_max float,
+            endgame_epa_start float, endgame_epa_pre_champs float, endgame_epa_end float, endgame_epa_mean float, endgame_epa_max float,
+            rp_1_epa_start float, rp_1_epa_pre_champs float, rp_1_epa_end float, rp_1_epa_mean float, rp_1_epa_max float,
+            rp_2_epa_start float, rp_2_epa_pre_champs float, rp_2_epa_end float, rp_2_epa_mean float, rp_2_epa_max float,
+            norm_epa_end float,
+            wins int, losses int, ties int, count int, winrate float,
+            epa_rank float, epa_percent float
         )''')
         self.__connection.commit()
 
     def save_team_year_stats(self, team_key: str, year: int, stats: TeamYearStats) -> None:
         '''Save the stats for a team in a given year'''
-        return # Disable save
         self._delete_team_year_stats(team_key, year)
-        self.__connection.execute('INSERT INTO team_year_stats VALUES (?, ?, ?, ?, ?, ?, ?, ?, '
-            '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
+        self.__connection.execute('INSERT INTO team_year_stats VALUES ('
+            '?, '
+            '?, ?, '
+            '?, ?, ?, ?, ?, ?, '
+            '?, ?, ?, ?, ?, '
+            '?, ?, ?, ?, ?, '
+            '?, ?, ?, ?, ?, '
+            '?, ?, ?, ?, ?, '
+            '?, ?, ?, ?, ?, '
+            '?, '
+            '?, ?, ?, ?, ?, '
+            '?, ?)', (
             datetime.utcnow().isoformat(),
             team_key, year,
-            stats.elo_start(), stats.elo_pre_champs(), stats.elo_end(),
-            stats.elo_mean(), stats.elo_max(), stats.elo_diff(),
-            stats.opr(), stats.opr_auto(), stats.opr_teleop(), stats.opr_1(), stats.opr_2(),
-            stats.opr_endgame(), stats.opr_fouls(), stats.opr_no_fouls(),
-            stats.ils_1(), stats.ils_2(),
-            stats.wins(), stats.losses(), stats.ties(), stats.count(),
-            stats.winrate(),
-            stats.elo_rank(), stats.elo_percentile(),
-            stats.opr_rank(), stats.opr_percentile()
+            stats.epa_start(), stats.epa_pre_champs(), stats.epa_end(), stats.epa_mean(), stats.epa_max(), stats.epa_diff(),
+            stats.auto_epa_start(), stats.auto_epa_pre_champs(), stats.auto_epa_end(), stats.auto_epa_mean(), stats.auto_epa_max(),
+            stats.teleop_epa_start(), stats.teleop_epa_pre_champs(), stats.teleop_epa_end(), stats.teleop_epa_mean(), stats.teleop_epa_max(),
+            stats.endgame_epa_start(), stats.endgame_epa_pre_champs(), stats.endgame_epa_end(), stats.endgame_epa_mean(), stats.endgame_epa_max(),
+            stats.rp_1_epa_start(), stats.rp_1_epa_pre_champs(), stats.rp_1_epa_end(), stats.rp_1_epa_mean(), stats.rp_1_epa_max(),
+            stats.rp_2_epa_start(), stats.rp_2_epa_pre_champs(), stats.rp_2_epa_end(), stats.rp_2_epa_mean(), stats.rp_2_epa_max(),
+            stats.norm_epa_end(),
+            stats.wins(), stats.losses(), stats.ties(), stats.count(), stats.winrate(),
+            stats.epa_rank(), stats.epa_percent()
         ))
         self.__connection.commit()
 
     def get_team_year_stats(self, team_key: str, year: int,
             cache_expiry: int) -> TeamYearStats | None:
         '''Get the stats for a team in a given year'''
-        return None # Disable load
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM team_year_stats WHERE team_key = ? AND year = ?',
                 [team_key, year])
@@ -585,15 +592,15 @@ class Cache:
         (
             timestamp,
             team, year,
-            elo_start, elo_pre_champs, elo_end,
-            elo_mean, elo_max, elo_diff,
-            opr, opr_auto, opr_teleop, opr_1, opr_2,
-            opr_endgame, opr_fouls, opr_no_fouls,
-            ils_1, ils_2,
-            wins, losses, ties, count,
-            winrate,
-            elo_rank, elo_percentile,
-            opr_rank, opr_percentile
+            epa_start, epa_pre_champs, epa_end, epa_mean, epa_max, epa_diff,
+            auto_epa_start, auto_epa_pre_champs, auto_epa_end, auto_epa_mean, auto_epa_max,
+            teleop_epa_start, teleop_epa_pre_champs, teleop_epa_end, teleop_epa_mean, teleop_epa_max,
+            endgame_epa_start, endgame_epa_pre_champs, endgame_epa_end, endgame_epa_mean, endgame_epa_max,
+            rp_1_epa_start, rp_1_epa_pre_champs, rp_1_epa_end, rp_1_epa_mean, rp_1_epa_max,
+            rp_2_epa_start, rp_2_epa_pre_champs, rp_2_epa_end, rp_2_epa_mean, rp_2_epa_max,
+            norm_epa_end,
+            wins, losses, ties, count, winrate,
+            epa_rank, epa_percent
         ) = result
         timestamp = datetime.fromisoformat(timestamp)
         if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
@@ -601,15 +608,15 @@ class Cache:
             return None
         return TeamYearStats(
             team, year,
-            elo_start, elo_pre_champs, elo_end,
-            elo_mean, elo_max, elo_diff,
-            opr, opr_auto, opr_teleop, opr_1, opr_2,
-            opr_endgame, opr_fouls, opr_no_fouls,
-            ils_1, ils_2,
-            wins, losses, ties, count,
-            winrate,
-            elo_rank, elo_percentile,
-            opr_rank, opr_percentile
+            epa_start, epa_pre_champs, epa_end, epa_mean, epa_max, epa_diff,
+            auto_epa_start, auto_epa_pre_champs, auto_epa_end, auto_epa_mean, auto_epa_max,
+            teleop_epa_start, teleop_epa_pre_champs, teleop_epa_end, teleop_epa_mean, teleop_epa_max,
+            endgame_epa_start, endgame_epa_pre_champs, endgame_epa_end, endgame_epa_mean, endgame_epa_max,
+            rp_1_epa_start, rp_1_epa_pre_champs, rp_1_epa_end, rp_1_epa_mean, rp_1_epa_max,
+            rp_2_epa_start, rp_2_epa_pre_champs, rp_2_epa_end, rp_2_epa_mean, rp_2_epa_max,
+            norm_epa_end,
+            wins, losses, ties, count, winrate,
+            epa_rank, epa_percent
         )
 
     def _delete_team_year_stats(self, team_key: str, year: int) -> None:
