@@ -1,7 +1,7 @@
 '''
 Classes for the models in this library.
 '''
-import datetime
+from datetime import datetime
 import json
 
 
@@ -472,7 +472,7 @@ class Event:
             'Remote'
         }
 
-    def dates(self) -> tuple[str, str]:
+    def dates(self) -> tuple[datetime, datetime]:
         '''Returns the dates of this event'''
         return self.__dates
 

@@ -173,9 +173,11 @@ class FRCPy:
         location = Location(event.city, event.state_prov, event.country)
         precise_location = PreciseLocation(location, event.lat, event.lng,
                 event.address, event.postal_code, event.gmaps_place_id)
+        start_date = datetime.strptime(event.start_date, '%Y-%m-%d')
+        end_date = datetime.strptime(event.end_date, '%Y-%m-%d')
         event = Event(
             key, event.name, location, event.event_type,
-            (event.start_date, event.end_date), district, event.short_name, event.week,
+            (start_date, end_date), district, event.short_name, event.week,
             precise_location, event.location_name, event.timezone,
             event.website, event.first_event_id, event.first_event_code,
             webcasts, event.division_keys,
