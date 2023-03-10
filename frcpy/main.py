@@ -5,9 +5,8 @@ from datetime import datetime
 import googlemaps
 import tbapy
 import statbotics
-from .models import Location, PreciseLocation, Team, TeamYearStats, Webcast, Event, MatchAlliance, MatchVideo, Match
+from .models import Location, PreciseLocation, Team, TeamEventStats, TeamYearStats, Webcast, Event, MatchAlliance, MatchVideo, Match
 from .cache import Cache
-
 
 
 class FRCPy:
@@ -16,29 +15,33 @@ class FRCPy:
     '''
     @staticmethod
     def __validate_winner(winner: str, red_score: int, blue_score: int) -> str:
-        if winner == 'red':
-            if red_score < blue_score:
-                raise ValueError('Red alliance won but red score is less than blue score')
-            elif red_score == blue_score:
-                raise ValueError('Red alliance won but red score is equal to blue score')
-            else:
-                pass
-        elif winner == 'blue':
-            if blue_score < red_score:
-                raise ValueError('Blue alliance won but blue score is less than red score')
-            elif blue_score == red_score:
-                raise ValueError('Blue alliance won but blue score is equal to red score')
-            else:
-                pass
-        else:
-            if red_score > blue_score:
-                pass
-            elif red_score < blue_score:
-                pass
-            else:
-                winner = 'tie' # TBA does not give us a tie
+        match (winner):
+            case 'red':
+                if red_score < blue_score:
+                    raise ValueError(
+                        'Red alliance won but red score is less than blue score')
+                elif red_score == blue_score:
+                    raise ValueError(
+                        'Red alliance won but red score is equal to blue score')
+                else:
+                    pass
+            case 'blue':
+                if blue_score < red_score:
+                    raise ValueError(
+                        'Blue alliance won but blue score is less than red score')
+                elif blue_score == red_score:
+                    raise ValueError(
+                        'Blue alliance won but blue score is equal to red score')
+                else:
+                    pass
+            case _:
+                if red_score > blue_score:
+                    pass
+                elif red_score < blue_score:
+                    pass
+                else:
+                    winner = 'tie'  # TBA does not give us a tie
         return winner
-
 
     def __init__(self, tba_token: str, gmaps_token: str = ''):
         self.__tba_client = tbapy.TBA(tba_token)
@@ -55,7 +58,6 @@ class FRCPy:
     def __exit__(self, exc_type, exc_value, traceback) -> None:
         self.__cache.__exit__(exc_type, exc_value, traceback)
 
-
     def _tba_client(self) -> tbapy.TBA:
         return self.__tba_client
 
@@ -68,8 +70,8 @@ class FRCPy:
     def _cache(self) -> Cache:
         return self.__cache
 
-
     # The Blue Alliance API provided data
+
     def year_range(self) -> tuple[int, int]:
         '''Get the year range of events (uncached)'''
         status = self.__tba_client.status()
@@ -127,10 +129,11 @@ class FRCPy:
         return team
 
     def team_year_events(self, team: str, year: int, cached: bool = True,
-            cache_expiry: int = 90) -> list[str]:
+                         cache_expiry: int = 90) -> list[str]:
         '''Get the events a team has participated in in a year'''
         if cached:
-            events = self.__cache.get_team_year_events(team, year, cache_expiry)
+            events = self.__cache.get_team_year_events(
+                team, year, cache_expiry)
             if events is not None:
                 return events
         events = self.__tba_client.team_events(team, year, keys=True)
@@ -169,10 +172,11 @@ class FRCPy:
                 file = webcast['file']
             except KeyError:
                 file = None
-            webcasts.append(Webcast(webcast['type'], webcast['channel'], date, file))
+            webcasts.append(
+                Webcast(webcast['type'], webcast['channel'], date, file))
         location = Location(event.city, event.state_prov, event.country)
         precise_location = PreciseLocation(location, event.lat, event.lng,
-                event.address, event.postal_code, event.gmaps_place_id)
+                                           event.address, event.postal_code, event.gmaps_place_id)
         start_date = datetime.strptime(event.start_date, '%Y-%m-%d')
         end_date = datetime.strptime(event.end_date, '%Y-%m-%d')
         event = Event(
@@ -210,10 +214,11 @@ class FRCPy:
         return matches
 
     def team_event_matches(self, team: str, event: str, cached: bool = True,
-            cache_expiry: int = 90) -> list[str]:
+                           cache_expiry: int = 90) -> list[str]:
         '''Get the matches a team has participated in an event'''
         if cached:
-            matches = self.__cache.get_team_event_matches(team, event, cache_expiry)
+            matches = self.__cache.get_team_event_matches(
+                team, event, cache_expiry)
             if matches is not None:
                 return matches
         matches = self.__tba_client.team_matches(team, event, keys=True)
@@ -230,7 +235,8 @@ class FRCPy:
         match = self.__tba_client.match(key)
         red_score = match.alliances['red']['score']
         blue_score = match.alliances['blue']['score']
-        winner = FRCPy.__validate_winner(match.winning_alliance, red_score, blue_score)
+        winner = FRCPy.__validate_winner(
+            match.winning_alliance, red_score, blue_score)
         videos = []
         for video in match.videos:
             videos.append(MatchVideo(video['type'], video['key']))
@@ -270,10 +276,10 @@ class FRCPy:
             self.__cache.save_match(match)
         return match
 
-
     # Statbotics API provided data
+
     def team_year_stats(self, team: str, year: int, cached: bool = True,
-            cache_expiry: int = 90) -> TeamYearStats:
+                        cache_expiry: int = 90) -> TeamYearStats:
         '''Get the stats for a team in a year'''
         if cached:
             stats = self.__cache.get_team_year_stats(team, year, cache_expiry)
@@ -323,7 +329,6 @@ class FRCPy:
         epa_rank = stats['total_epa_rank']
         epa_percent = stats['total_epa_percentile']
 
-
         stats = TeamYearStats(
             team, year,
             epa_start, epa_pre_champs, epa_end, epa_mean, epa_max, epa_diff,
@@ -340,6 +345,63 @@ class FRCPy:
             self.__cache.save_team_year_stats(team, year, stats)
         return stats
 
+    def team_event_stats(self, team: str, event: str, cached: bool = True,
+                         cache_expiry: int = 90) -> TeamEventStats:
+        '''Get the stats for a team in an event'''
+        if cached:
+            stats = self.__cache.get_team_event_stats(
+                team, event, cache_expiry)
+            if stats is not None:
+                return stats
+        stats = self.__statbotics_client.get_team_event(
+            Team.team_key_to_number(team), event
+        )
+
+        epa_start = stats['epa_start']
+        epa_pre_playoffs = stats['epa_pre_playoffs']
+        epa_end = stats['epa_end']
+        epa_mean = stats['epa_mean']
+        epa_max = stats['epa_max']
+        epa_diff = stats['epa_diff']
+        auto_epa_start = stats['auto_epa_start']
+        auto_epa_pre_playoffs = stats['auto_epa_pre_playoffs']
+        auto_epa_end = stats['auto_epa_end']
+        auto_epa_mean = stats['auto_epa_mean']
+        auto_epa_max = stats['auto_epa_max']
+        teleop_epa_start = stats['teleop_epa_start']
+        teleop_epa_pre_playoffs = stats['teleop_epa_pre_playoffs']
+        teleop_epa_end = stats['teleop_epa_end']
+        teleop_epa_mean = stats['teleop_epa_mean']
+        teleop_epa_max = stats['teleop_epa_max']
+        endgame_epa_start = stats['endgame_epa_start']
+        endgame_epa_pre_playoffs = stats['endgame_epa_pre_playoffs']
+        endgame_epa_end = stats['endgame_epa_end']
+        endgame_epa_mean = stats['endgame_epa_mean']
+        endgame_epa_max = stats['endgame_epa_max']
+        rp_1_epa_start = stats['rp_1_epa_start']
+        rp_1_epa_end = stats['rp_1_epa_end']
+        rp_1_epa_mean = stats['rp_1_epa_mean']
+        rp_1_epa_max = stats['rp_1_epa_max']
+        rp_2_epa_start = stats['rp_2_epa_start']
+        rp_2_epa_end = stats['rp_2_epa_end']
+        rp_2_epa_mean = stats['rp_2_epa_mean']
+        rp_2_epa_max = stats['rp_2_epa_max']
+        wins = stats['wins']
+        losses = stats['losses']
+        ties = stats['ties']
+        count = stats['count']
+        winrate = stats['winrate']
+        rps = stats['rps']
+        rps_per_match = stats['rps_per_match']
+        rank = stats['rank']
+        num_teams = stats['num_teams']
+
+        stats = TeamEventStats(team, event, epa_start, epa_pre_playoffs, epa_end, epa_mean, epa_max, epa_diff, auto_epa_start, auto_epa_pre_playoffs, auto_epa_end, auto_epa_mean, auto_epa_max, teleop_epa_start, teleop_epa_pre_playoffs, teleop_epa_end, teleop_epa_mean, teleop_epa_max,
+                               endgame_epa_start, endgame_epa_pre_playoffs, endgame_epa_end, endgame_epa_mean, endgame_epa_max, rp_1_epa_start, rp_1_epa_end, rp_1_epa_mean, rp_1_epa_max, rp_2_epa_start, rp_2_epa_end, rp_2_epa_mean, rp_2_epa_max, wins, losses, ties, count, winrate, rps, rps_per_match, rank, num_teams)
+
+        if cached:
+            self.__cache.save_team_event_stats(team, event, stats)
+        return stats
 
     # Google Maps API provided data
     def _geocode(self, string: str) -> tuple[float, float, str, str, str] | None:
@@ -396,12 +458,13 @@ class FRCPy:
         return PreciseLocation(location, lat, lng, address, postal_code, place_id)
 
     def team_precise_location(self, team: Team, cached: bool = True,
-            cache_expiry: int = 360) -> PreciseLocation | None:
+                              cache_expiry: int = 360) -> PreciseLocation | None:
         '''Attempt to get a precise google-maps location for a team'''
         if self.__gmaps_client is None:
             return None
         if cached:
-            data = self.__cache.get_team_precise_location(team.key(), cache_expiry)
+            data = self.__cache.get_team_precise_location(
+                team.key(), cache_expiry)
             if data is not None and data.postal_code() is not None:
                 return data
 
@@ -415,7 +478,7 @@ class FRCPy:
         return data
 
     def precise_distance(self, origin: PreciseLocation, destination: PreciseLocation,
-            cached: bool = True, cache_expiry: int = 1800) -> float | None:
+                         cached: bool = True, cache_expiry: int = 1800) -> float | None:
         '''Get a precise google-maps distance between two precise locations'''
         if self.__gmaps_client is None:
             return None
@@ -436,5 +499,6 @@ class FRCPy:
             return None
         meters = data['distance']['value']
         if cached:
-            self.__cache.save_precise_distance(origin.place_id(), destination.place_id(), meters)
+            self.__cache.save_precise_distance(
+                origin.place_id(), destination.place_id(), meters)
         return meters

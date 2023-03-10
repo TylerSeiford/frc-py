@@ -97,7 +97,16 @@ if __name__ == '__main__':
             videos.append(f"{video}")
         print(f"Videos: {videos}")
 
-        print('***** Team Stats *****')
+        print('***** Team Event Stats *****')
+        stats = api.team_event_stats('frc2846', '2022mndu2')
+        print(f"EPA: {stats.epa_max()}")
+        print(f"Auto EPA: {stats.auto_epa_max()}")
+        print(f"Teleop EPA: {stats.teleop_epa_max()}")
+        print(f"Endgame EPA: {stats.endgame_epa_max()}")
+        print(f"Win Rate: {stats.winrate() * 100:.2f}%")
+        print(f"Rank: {stats.rank()} of {stats.num_teams()}")
+
+        print('***** Team Year Stats *****')
         stats = api.team_year_stats('frc2846', 2022)
         print(f"EPA: {stats.epa_max()}")
         print(f"Auto EPA: {stats.auto_epa_max()}")
