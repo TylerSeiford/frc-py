@@ -5,18 +5,19 @@ from datetime import datetime, timedelta
 import os
 import sqlite3
 import json
-from .models import Location, PreciseLocation, Team, TeamYearStats, Webcast, Event, MatchAlliance, MatchVideo, Match
-
+from .models import Location, PreciseLocation, Team, TeamEventStats, TeamYearStats, Webcast, Event, MatchAlliance, MatchVideo, Match
 
 
 class Cache:
     '''
     Class to cache data
     '''
+
     def __init__(self, cache_dir: str = './cache'):
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
-        self.__connection = sqlite3.connect(os.path.join(cache_dir, 'cache.db'))
+        self.__connection = sqlite3.connect(
+            os.path.join(cache_dir, 'cache.db'))
         self.__init_team_index()
         self.__init_teams()
         self.__init_team_years()
@@ -28,6 +29,7 @@ class Cache:
         self.__init_team_event_matches()
         self.__init_match()
         self.__init_team_year_stats()
+        self.__init_team_event_stats()
         self.__init_team_precise_locations()
         self.__init_precise_distances()
 
@@ -39,7 +41,6 @@ class Cache:
 
     def _connection(self) -> sqlite3.Connection:
         return self.__connection
-
 
     def __init_team_index(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS team_index (
@@ -74,7 +75,6 @@ class Cache:
     def _delete_team_index(self) -> None:
         self.__connection.execute('DELETE FROM team_index')
         self.__connection.commit()
-
 
     def __init_teams(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS teams (
@@ -125,9 +125,9 @@ class Cache:
         )
 
     def _delete_team(self, team_key: str) -> None:
-        self.__connection.execute('DELETE FROM teams WHERE key = ?', [team_key])
+        self.__connection.execute(
+            'DELETE FROM teams WHERE key = ?', [team_key])
         self.__connection.commit()
-
 
     def __init_team_years(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS team_years (
@@ -161,9 +161,9 @@ class Cache:
         return json.loads(years)
 
     def _delete_team_years(self, team_key: str) -> None:
-        self.__connection.execute('DELETE FROM team_years WHERE key = ?', [team_key])
+        self.__connection.execute(
+            'DELETE FROM team_years WHERE key = ?', [team_key])
         self.__connection.commit()
-
 
     def __init_team_year_events(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS team_year_events (
@@ -185,7 +185,7 @@ class Cache:
         '''Get the events a team has participated in for a given year'''
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM team_year_events WHERE key = ? AND year = ?',
-                [team_key, year])
+                       [team_key, year])
         result = cursor.fetchone()
         cursor.close()
         if result is None:
@@ -199,9 +199,8 @@ class Cache:
 
     def _delete_team_year_events(self, team_key: str, year: int) -> None:
         self.__connection.execute('DELETE FROM team_year_events WHERE key = ? AND year = ?',
-                [team_key, year])
+                                  [team_key, year])
         self.__connection.commit()
-
 
     def __init_year_events(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS year_events (
@@ -235,9 +234,9 @@ class Cache:
         return json.loads(events)
 
     def _delete_year_events(self, year: int) -> None:
-        self.__connection.execute('DELETE FROM year_events WHERE year = ?', [year])
+        self.__connection.execute(
+            'DELETE FROM year_events WHERE year = ?', [year])
         self.__connection.commit()
-
 
     def __init_events(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS events (
@@ -266,22 +265,23 @@ class Cache:
             webcasts.append(webcast.to_json())
         precise_location = event.precise_location()
         self.__connection.execute('INSERT INTO events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '
-                '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
-            datetime.utcnow().isoformat(),
-            event.key(), Event.event_key_to_year(event.key()), event.name(),
-            location.city(), location.state_prov(), location.country(),
-            event.event_type(),
-            start.isoformat(), end.isoformat(),
-            event.district_key(),
-            event.short_name(), event.week(),
-            precise_location.address(), precise_location.postal_code(),
-            precise_location.place_id(),
-            precise_location.latitude(), precise_location.longitude(),
-            event.location_name(), event.timezone(),
-            event.website(), event.first_event_id(), event.first_event_code(),
-            json.dumps(webcasts), json.dumps(event.divisions()),
-            event.parent_event_key(), event.playoff_type()
-        ))
+                                  '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
+                                      datetime.utcnow().isoformat(),
+                                      event.key(), Event.event_key_to_year(event.key()), event.name(),
+                                      location.city(), location.state_prov(), location.country(),
+                                      event.event_type(),
+                                      start.isoformat(), end.isoformat(),
+                                      event.district_key(),
+                                      event.short_name(), event.week(),
+                                      precise_location.address(), precise_location.postal_code(),
+                                      precise_location.place_id(),
+                                      precise_location.latitude(), precise_location.longitude(),
+                                      event.location_name(), event.timezone(),
+                                      event.website(), event.first_event_id(), event.first_event_code(),
+                                      json.dumps(webcasts), json.dumps(
+                                          event.divisions()),
+                                      event.parent_event_key(), event.playoff_type()
+                                  ))
         self.__connection.commit()
 
     def get_event(self, event_key: str, cache_expiry: int) -> Event | None:
@@ -322,14 +322,14 @@ class Cache:
         for webcast in raw_webcasts:
             webcast = json.loads(webcast)
             webcasts.append(Webcast(webcast['type'], webcast['channel'],
-                    webcast['date'], webcast['file']))
+                                    webcast['date'], webcast['file']))
         return Event(
             key, name,
             location,
             event_type,
             (start, end),
             event_district,
-            short_name, week, 
+            short_name, week,
             precise_location,
             location_name, timezone,
             website, first_event_id, first_event_code,
@@ -337,9 +337,9 @@ class Cache:
         )
 
     def _delete_event(self, event_key: str) -> None:
-        self.__connection.execute('DELETE FROM events WHERE key = ?', [event_key])
+        self.__connection.execute(
+            'DELETE FROM events WHERE key = ?', [event_key])
         self.__connection.commit()
-
 
     def __init_event_teams(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS event_teams (
@@ -360,7 +360,8 @@ class Cache:
     def get_event_teams(self, event_key: str, cache_expiry: int) -> list[str] | None:
         '''Get the teams for an event'''
         cursor = self.__connection.cursor()
-        cursor.execute('SELECT * FROM event_teams WHERE event = ?', [event_key])
+        cursor.execute(
+            'SELECT * FROM event_teams WHERE event = ?', [event_key])
         result = cursor.fetchone()
         cursor.close()
         if result is None:
@@ -373,9 +374,9 @@ class Cache:
         return json.loads(teams)
 
     def _delete_event_teams(self, event_key: str) -> None:
-        self.__connection.execute('DELETE FROM event_teams WHERE event = ?', [event_key])
+        self.__connection.execute(
+            'DELETE FROM event_teams WHERE event = ?', [event_key])
         self.__connection.commit()
-
 
     def __init_event_matches(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS event_matches (
@@ -396,7 +397,8 @@ class Cache:
     def get_event_matches(self, event_key: str, cache_expiry: int) -> list[str] | None:
         '''Get the matches for an event'''
         cursor = self.__connection.cursor()
-        cursor.execute('SELECT * FROM event_matches WHERE event = ?', [event_key])
+        cursor.execute(
+            'SELECT * FROM event_matches WHERE event = ?', [event_key])
         result = cursor.fetchone()
         cursor.close()
         if result is None:
@@ -409,9 +411,9 @@ class Cache:
         return json.loads(matches)
 
     def _delete_event_matches(self, event_key: str) -> None:
-        self.__connection.execute('DELETE FROM event_matches WHERE event = ?', [event_key])
+        self.__connection.execute(
+            'DELETE FROM event_matches WHERE event = ?', [event_key])
         self.__connection.commit()
-
 
     def __init_team_event_matches(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS team_event_matches (
@@ -430,11 +432,11 @@ class Cache:
         self.__connection.commit()
 
     def get_team_event_matches(self, team_key: str, event_key: str,
-            cache_expiry: int) -> list[str] | None:
+                               cache_expiry: int) -> list[str] | None:
         '''Get the matches for a team at an event'''
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM team_event_matches WHERE team = ? AND event = ?',
-                [team_key, event_key])
+                       [team_key, event_key])
         result = cursor.fetchone()
         cursor.close()
         if result is None:
@@ -448,9 +450,8 @@ class Cache:
 
     def _delete_team_event_matches(self, team_key: str, event_key: str) -> None:
         self.__connection.execute('DELETE FROM team_event_matches WHERE team = ? AND event = ?',
-                [team_key, event_key])
+                                  [team_key, event_key])
         self.__connection.commit()
-
 
     def __init_match(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS matches (
@@ -473,19 +474,19 @@ class Cache:
         for video in match.videos():
             videos.append(video.to_json())
         self.__connection.execute('INSERT INTO matches VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '
-                '?, ?, ?, ?, ?, ?, ?, ?)', (
-            datetime.utcnow().isoformat(),
-            match.key(),
-            Match.match_key_to_year(match.key()),
-            Match.match_key_to_event(match.key()),
-            match.level(), match.set_number(), match.match_number(),
-            match.red_score(), match.blue_score(),
-            match.red_teams().to_json(), match.blue_teams().to_json(),
-            match.winner(),
-            match.schedule_time().isoformat(), match.predicted_time().isoformat(),
-            match.actual_time().isoformat(), match.result_time().isoformat(),
-            json.dumps(videos)
-        ))
+                                  '?, ?, ?, ?, ?, ?, ?, ?)', (
+                                      datetime.utcnow().isoformat(),
+                                      match.key(),
+                                      Match.match_key_to_year(match.key()),
+                                      Match.match_key_to_event(match.key()),
+                                      match.level(), match.set_number(), match.match_number(),
+                                      match.red_score(), match.blue_score(),
+                                      match.red_teams().to_json(), match.blue_teams().to_json(),
+                                      match.winner(),
+                                      match.schedule_time().isoformat(), match.predicted_time().isoformat(),
+                                      match.actual_time().isoformat(), match.result_time().isoformat(),
+                                      json.dumps(videos)
+                                  ))
         self.__connection.commit()
 
     def get_match(self, match_key: str, cache_expiry: int) -> Match | None:
@@ -507,13 +508,11 @@ class Cache:
             self._delete_match(match_key)
             return None
         red_teams = json.loads(red_teams)
-        red_teams = MatchAlliance(red_teams['teams'], red_teams['dq'], red_teams['surrogate'])
+        red_teams = MatchAlliance(
+            red_teams['teams'], red_teams['dq'], red_teams['surrogate'])
         blue_teams = json.loads(blue_teams)
-        blue_teams = MatchAlliance(blue_teams['teams'], blue_teams['dq'], blue_teams['surrogate'])
-        scheduled_time = datetime.fromisoformat(scheduled_time)
-        predicted_time = datetime.fromisoformat(predicted_time)
-        actual_time = datetime.fromisoformat(actual_time)
-        result_time = datetime.fromisoformat(result_time)
+        blue_teams = MatchAlliance(
+            blue_teams['teams'], blue_teams['dq'], blue_teams['surrogate'])
         raw_videos = json.loads(raw_videos)
         videos = []
         for video in raw_videos:
@@ -528,17 +527,17 @@ class Cache:
         if result_time is not None:
             result_time = datetime.fromisoformat(result_time)
         return Match(key, level, set_number, match_number,
-                red_score, blue_score,
-                red_teams, blue_teams,
-                winner,
-                scheduled_time, predicted_time, actual_time, result_time,
-                videos
-        )
+                     red_score, blue_score,
+                     red_teams, blue_teams,
+                     winner,
+                     scheduled_time, predicted_time, actual_time, result_time,
+                     videos
+                     )
 
     def _delete_match(self, match_key: str) -> None:
-        self.__connection.execute('DELETE FROM matches WHERE key = ?', [match_key])
+        self.__connection.execute(
+            'DELETE FROM matches WHERE key = ?', [match_key])
         self.__connection.commit()
-
 
     def __init_team_year_stats(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS team_year_stats (
@@ -560,37 +559,43 @@ class Cache:
         '''Save the stats for a team in a given year'''
         self._delete_team_year_stats(team_key, year)
         self.__connection.execute('INSERT INTO team_year_stats VALUES ('
-            '?, '
-            '?, ?, '
-            '?, ?, ?, ?, ?, ?, '
-            '?, ?, ?, ?, ?, '
-            '?, ?, ?, ?, ?, '
-            '?, ?, ?, ?, ?, '
-            '?, ?, ?, ?, ?, '
-            '?, ?, ?, ?, ?, '
-            '?, '
-            '?, ?, ?, ?, ?, '
-            '?, ?)', (
-            datetime.utcnow().isoformat(),
-            team_key, year,
-            stats.epa_start(), stats.epa_pre_champs(), stats.epa_end(), stats.epa_mean(), stats.epa_max(), stats.epa_diff(),
-            stats.auto_epa_start(), stats.auto_epa_pre_champs(), stats.auto_epa_end(), stats.auto_epa_mean(), stats.auto_epa_max(),
-            stats.teleop_epa_start(), stats.teleop_epa_pre_champs(), stats.teleop_epa_end(), stats.teleop_epa_mean(), stats.teleop_epa_max(),
-            stats.endgame_epa_start(), stats.endgame_epa_pre_champs(), stats.endgame_epa_end(), stats.endgame_epa_mean(), stats.endgame_epa_max(),
-            stats.rp_1_epa_start(), stats.rp_1_epa_pre_champs(), stats.rp_1_epa_end(), stats.rp_1_epa_mean(), stats.rp_1_epa_max(),
-            stats.rp_2_epa_start(), stats.rp_2_epa_pre_champs(), stats.rp_2_epa_end(), stats.rp_2_epa_mean(), stats.rp_2_epa_max(),
-            stats.norm_epa_end(),
-            stats.wins(), stats.losses(), stats.ties(), stats.count(), stats.winrate(),
-            stats.epa_rank(), stats.epa_percent()
-        ))
+                                  '?, '
+                                  '?, ?, '
+                                  '?, ?, ?, ?, ?, ?, '
+                                  '?, ?, ?, ?, ?, '
+                                  '?, ?, ?, ?, ?, '
+                                  '?, ?, ?, ?, ?, '
+                                  '?, ?, ?, ?, ?, '
+                                  '?, ?, ?, ?, ?, '
+                                  '?, '
+                                  '?, ?, ?, ?, ?, '
+                                  '?, ?)', (
+                                      datetime.utcnow().isoformat(),
+                                      team_key, year,
+                                      stats.epa_start(), stats.epa_pre_champs(), stats.epa_end(
+                                      ), stats.epa_mean(), stats.epa_max(), stats.epa_diff(),
+                                      stats.auto_epa_start(), stats.auto_epa_pre_champs(
+                                      ), stats.auto_epa_end(), stats.auto_epa_mean(), stats.auto_epa_max(),
+                                      stats.teleop_epa_start(), stats.teleop_epa_pre_champs(
+                                      ), stats.teleop_epa_end(), stats.teleop_epa_mean(), stats.teleop_epa_max(),
+                                      stats.endgame_epa_start(), stats.endgame_epa_pre_champs(
+                                      ), stats.endgame_epa_end(), stats.endgame_epa_mean(), stats.endgame_epa_max(),
+                                      stats.rp_1_epa_start(), stats.rp_1_epa_pre_champs(
+                                      ), stats.rp_1_epa_end(), stats.rp_1_epa_mean(), stats.rp_1_epa_max(),
+                                      stats.rp_2_epa_start(), stats.rp_2_epa_pre_champs(
+                                      ), stats.rp_2_epa_end(), stats.rp_2_epa_mean(), stats.rp_2_epa_max(),
+                                      stats.norm_epa_end(),
+                                      stats.wins(), stats.losses(), stats.ties(), stats.count(), stats.winrate(),
+                                      stats.epa_rank(), stats.epa_percent()
+                                  ))
         self.__connection.commit()
 
     def get_team_year_stats(self, team_key: str, year: int,
-            cache_expiry: int) -> TeamYearStats | None:
+                            cache_expiry: int) -> TeamYearStats | None:
         '''Get the stats for a team in a given year'''
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM team_year_stats WHERE team_key = ? AND year = ?',
-                [team_key, year])
+                       [team_key, year])
         result = cursor.fetchone()
         cursor.close()
         if result is None:
@@ -627,9 +632,93 @@ class Cache:
 
     def _delete_team_year_stats(self, team_key: str, year: int) -> None:
         self.__connection.execute('DELETE FROM team_year_stats WHERE team_key = ? AND year = ?',
-                [team_key, year])
+                                  [team_key, year])
         self.__connection.commit()
 
+    def __init_team_event_stats(self) -> None:
+        self.__connection.execute('''CREATE TABLE IF NOT EXISTS team_event_stats (
+            last_updated datetime,
+            team_key str, event_key str,
+            epa_start float, epa_pre_playoffs float, epa_end float,
+            epa_mean float, epa_max float, epa_diff float,
+            auto_epa_start float, auto_epa_pre_playoffs float, auto_epa_end float, auto_epa_mean float, auto_epa_max float,
+            teleop_epa_start float, teleop_epa_pre_playoffs float, teleop_epa_end float, teleop_epa_mean float, teleop_epa_max float,
+            endgame_epa_start float, endgame_epa_pre_playoffs float, endgame_epa_end float, endgame_epa_mean float, endgame_epa_max float,
+            rp_1_epa_start float, rp_1_epa_end float, rp_1_epa_mean float, rp_1_epa_max float,
+            rp_2_epa_start float, rp_2_epa_end float, rp_2_epa_mean float, rp_2_epa_max float,
+            wins int, losses int, ties int, count int, winrate float,
+            rps int, rps_per_match float, rank int, num_teams int
+        )''')
+        self.__connection.commit()
+
+    def save_team_event_stats(self, team_key: str, event_key: str, stats: TeamEventStats) -> None:
+        '''Save the stats for a team in a given year'''
+        self._delete_team_year_stats(team_key, event_key)
+        self.__connection.execute('INSERT INTO team_event_stats VALUES ('
+                                  '?, '
+                                  '?, ?, '
+                                  '?, ?, ?, ?, ?, ?, '
+                                  '?, ?, ?, ?, ?, '
+                                  '?, ?, ?, ?, ?, '
+                                  '?, ?, ?, ?, ?, '
+                                  '?, ?, ?, ?, '
+                                  '?, ?, ?, ?, '
+                                  '?, ?, ?, ?, ?, '
+                                  '?, ?, ?, ?)', (
+                                      datetime.utcnow().isoformat(),
+                                      team_key, event_key,
+                                      stats.epa_start(), stats.epa_pre_playoffs(), stats.epa_end(
+                                      ), stats.epa_mean(), stats.epa_max(), stats.epa_diff(),
+                                      stats.auto_epa_start(), stats.auto_epa_pre_playoffs(
+                                      ), stats.auto_epa_end(), stats.auto_epa_mean(), stats.auto_epa_max(),
+                                      stats.teleop_epa_start(), stats.teleop_epa_pre_playoffs(
+                                      ), stats.teleop_epa_end(), stats.teleop_epa_mean(), stats.teleop_epa_max(),
+                                      stats.endgame_epa_start(), stats.endgame_epa_pre_playoffs(
+                                      ), stats.endgame_epa_end(), stats.endgame_epa_mean(), stats.endgame_epa_max(),
+                                      stats.rp_1_epa_start(), stats.rp_1_epa_end(
+                                      ), stats.rp_1_epa_mean(), stats.rp_1_epa_max(),
+                                      stats.rp_2_epa_start(), stats.rp_2_epa_end(
+                                      ), stats.rp_2_epa_mean(), stats.rp_2_epa_max(),
+                                      stats.wins(), stats.losses(), stats.ties(), stats.count(), stats.winrate(),
+                                      stats.rps(), stats.rps_per_match(), stats.rank(), stats.num_teams()
+                                  ))
+        self.__connection.commit()
+
+    def get_team_event_stats(self, team_key: str, event_key: str,
+                             cache_expiry: int) -> TeamEventStats | None:
+        '''Get the stats for a team in a given event'''
+        cursor = self.__connection.cursor()
+        cursor.execute('SELECT * FROM team_event_stats WHERE team_key = ? AND event_key = ?',
+                       [team_key, event_key])
+        result = cursor.fetchone()
+        cursor.close()
+        if result is None:
+            return None
+        (
+            timestamp,
+            team, year,
+            epa_start, epa_pre_playoffs, epa_end, epa_mean, epa_max, epa_diff,
+            auto_epa_start, auto_epa_pre_playoffs, auto_epa_end, auto_epa_mean, auto_epa_max,
+            teleop_epa_start, teleop_epa_pre_playoffs, teleop_epa_end, teleop_epa_mean, teleop_epa_max,
+            endgame_epa_start, endgame_epa_pre_playoffs, endgame_epa_end, endgame_epa_mean, endgame_epa_max,
+            rp_1_epa_start, rp_1_epa_end, rp_1_epa_mean, rp_1_epa_max,
+            rp_2_epa_start, rp_2_epa_end, rp_2_epa_mean, rp_2_epa_max,
+            wins, losses, ties, count, winrate, rps, rps_per_match, rank, num_teams
+        ) = result
+        timestamp = datetime.fromisoformat(timestamp)
+        if timestamp + timedelta(days=cache_expiry) < datetime.utcnow():
+            self._delete_team_year_stats(team_key, year)
+            return None
+        return TeamEventStats(
+            team, year,
+            epa_start, epa_pre_playoffs, epa_end, epa_mean, epa_max, epa_diff,
+            auto_epa_start, auto_epa_pre_playoffs, auto_epa_end, auto_epa_mean, auto_epa_max,
+            teleop_epa_start, teleop_epa_pre_playoffs, teleop_epa_end, teleop_epa_mean, teleop_epa_max,
+            endgame_epa_start, endgame_epa_pre_playoffs, endgame_epa_end, endgame_epa_mean, endgame_epa_max,
+            rp_1_epa_start, rp_1_epa_end, rp_1_epa_mean, rp_1_epa_max,
+            rp_2_epa_start, rp_2_epa_end, rp_2_epa_mean, rp_2_epa_max,
+            wins, losses, ties, count, winrate, rps, rps_per_match, rank, num_teams
+        )
 
     def __init_team_precise_locations(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS team_precise_locations (
@@ -646,24 +735,25 @@ class Cache:
         '''Save the precise location for a team'''
         self._delete_team_precise_location(team_key)
         self.__connection.execute('INSERT INTO team_precise_locations VALUES (?, ?, ?, ?, ?, '
-                '?, ?, ?, ?, ?)', (
-            datetime.utcnow().isoformat(),
-            team_key,
-            location.location().city(),
-            location.location().state_prov(),
-            location.location().country(),
-            location.latitude(), location.longitude(),
-            location.address(),
-            location.postal_code(),
-            location.place_id()
-        ))
+                                  '?, ?, ?, ?, ?)', (
+                                      datetime.utcnow().isoformat(),
+                                      team_key,
+                                      location.location().city(),
+                                      location.location().state_prov(),
+                                      location.location().country(),
+                                      location.latitude(), location.longitude(),
+                                      location.address(),
+                                      location.postal_code(),
+                                      location.place_id()
+                                  ))
         self.__connection.commit()
 
     def get_team_precise_location(self, team_key: str,
-            cache_expiry: int) -> PreciseLocation | None:
+                                  cache_expiry: int) -> PreciseLocation | None:
         '''Get the precise location for a team'''
         cursor = self.__connection.cursor()
-        cursor.execute('SELECT * FROM team_precise_locations WHERE team_key = ?', [team_key])
+        cursor.execute(
+            'SELECT * FROM team_precise_locations WHERE team_key = ?', [team_key])
         result = cursor.fetchone()
         cursor.close()
         if result is None:
@@ -691,9 +781,8 @@ class Cache:
 
     def _delete_team_precise_location(self, team_key: str) -> None:
         self.__connection.execute('DELETE FROM team_precise_locations WHERE team_key = ?',
-                [team_key])
+                                  [team_key])
         self.__connection.commit()
-
 
     def __init_precise_distances(self) -> None:
         self.__connection.execute('''CREATE TABLE IF NOT EXISTS precise_distances (
@@ -714,11 +803,11 @@ class Cache:
         self.__connection.commit()
 
     def get_precise_distance(self, origin_id: str, destination_id: str, cache_expiry: int
-            ) -> float | None:
+                             ) -> float | None:
         '''Get the precise distance for two IDs'''
         cursor = self.__connection.cursor()
         cursor.execute('SELECT * FROM precise_distances WHERE origin_id = ? AND destination_id = ?',
-            [origin_id, destination_id])
+                       [origin_id, destination_id])
         result = cursor.fetchone()
         cursor.close()
         if result is None:
