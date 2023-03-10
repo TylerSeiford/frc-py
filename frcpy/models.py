@@ -5,11 +5,11 @@ from datetime import datetime
 import json
 
 
-
 class Location:
     '''
     Represents a team or event's location.
     '''
+
     def __init__(self, city: str, state_prov: str, country: str):
         self.__city = city
         self.__state_prov = state_prov
@@ -36,8 +36,9 @@ class PreciseLocation:
     '''
     Represents the precise location of a team or event.
     '''
+
     def __init__(self, location: Location, latitude: float, longitude: float,
-            address: str, postal_code: str | None, place_id: str):
+                 address: str, postal_code: str | None, place_id: str):
         self.__location = location
         self.__latitude = latitude
         self.__longitude = longitude
@@ -83,9 +84,8 @@ class Team:
         '''Converts a team key to a team number'''
         return int(team_key[3:])
 
-
     def __init__(self, key: str, nickname: str, name: str, location: Location,
-            school_name: str, website: str, rookie_year: str, motto: str):
+                 school_name: str, website: str, rookie_year: str, motto: str):
         self.__key = key
         self.__nickname = nickname
         self.__name = name
@@ -132,18 +132,19 @@ class TeamYearStats:
     '''
     Represents a team's statistics for a single year
     '''
+
     def __init__(self, team_key: str, year: int,
-            epa_start: float, epa_pre_champs: float, epa_end: float,
-            epa_mean: float, epa_max: float, epa_diff: float,
-            auto_epa_start: float, auto_epa_pre_champs: float, auto_epa_end: float, auto_epa_mean: float, auto_epa_max: float,
-            teleop_epa_start: float, teleop_epa_pre_champs: float, teleop_epa_end: float, teleop_epa_mean: float, teleop_epa_max: float,
-            endgame_epa_start: float, endgame_epa_pre_champs: float, endgame_epa_end: float, endgame_epa_mean: float, endgame_epa_max: float,
-            rp_1_epa_start: float, rp_1_epa_pre_champs: float, rp_1_epa_end: float, rp_1_epa_mean: float, rp_1_epa_max: float,
-            rp_2_epa_start: float, rp_2_epa_pre_champs: float, rp_2_epa_end: float, rp_2_epa_mean: float, rp_2_epa_max: float,
-            norm_epa_end: float,
-            wins: int, losses: int, ties: int, count: int, winrate: float,
-            epa_rank: float, epa_percent: float
-    ) -> None:
+                 epa_start: float, epa_pre_champs: float, epa_end: float,
+                 epa_mean: float, epa_max: float, epa_diff: float,
+                 auto_epa_start: float, auto_epa_pre_champs: float, auto_epa_end: float, auto_epa_mean: float, auto_epa_max: float,
+                 teleop_epa_start: float, teleop_epa_pre_champs: float, teleop_epa_end: float, teleop_epa_mean: float, teleop_epa_max: float,
+                 endgame_epa_start: float, endgame_epa_pre_champs: float, endgame_epa_end: float, endgame_epa_mean: float, endgame_epa_max: float,
+                 rp_1_epa_start: float, rp_1_epa_pre_champs: float, rp_1_epa_end: float, rp_1_epa_mean: float, rp_1_epa_max: float,
+                 rp_2_epa_start: float, rp_2_epa_pre_champs: float, rp_2_epa_end: float, rp_2_epa_mean: float, rp_2_epa_max: float,
+                 norm_epa_end: float,
+                 wins: int, losses: int, ties: int, count: int, winrate: float,
+                 epa_rank: float, epa_percent: float
+                 ) -> None:
         self.__team_key = team_key
         self.__year = year
         self.__epa_start = epa_start
@@ -317,10 +318,191 @@ class TeamYearStats:
         return self.__epa_percent
 
 
+class TeamEventStats:
+    '''
+    Represents a team's statistics for a single event
+    '''
+
+    def __init__(self, team_key: str, event_key: str,
+                 epa_start: float, epa_pre_playoffs: float, epa_end: float,
+                 epa_mean: float, epa_max: float, epa_diff: float,
+                 auto_epa_start: float, auto_epa_pre_playoffs: float, auto_epa_end: float, auto_epa_mean: float, auto_epa_max: float,
+                 teleop_epa_start: float, teleop_epa_pre_playoffs: float, teleop_epa_end: float, teleop_epa_mean: float, teleop_epa_max: float,
+                 endgame_epa_start: float, endgame_epa_pre_playoffs: float, endgame_epa_end: float, endgame_epa_mean: float, endgame_epa_max: float,
+                 rp_1_epa_start: float, rp_1_epa_end: float, rp_1_epa_mean: float, rp_1_epa_max: float,
+                 rp_2_epa_start: float, rp_2_epa_end: float, rp_2_epa_mean: float, rp_2_epa_max: float,
+                 wins: int, losses: int, ties: int, count: int, winrate: float,
+                 rps: int, rps_per_match: float, rank: int, num_teams: int
+                 ) -> None:
+        self.__team_key = team_key
+        self.__event_key = event_key
+        self.__epa_start = epa_start
+        self.__epa_pre_playoffs = epa_pre_playoffs
+        self.__epa_end = epa_end
+        self.__epa_mean = epa_mean
+        self.__epa_max = epa_max
+        self.__epa_diff = epa_diff
+        self.__auto_epa_start = auto_epa_start
+        self.__auto_epa_pre_playoffs = auto_epa_pre_playoffs
+        self.__auto_epa_end = auto_epa_end
+        self.__auto_epa_mean = auto_epa_mean
+        self.__auto_epa_max = auto_epa_max
+        self.__teleop_epa_start = teleop_epa_start
+        self.__teleop_epa_pre_playoffs = teleop_epa_pre_playoffs
+        self.__teleop_epa_end = teleop_epa_end
+        self.__teleop_epa_mean = teleop_epa_mean
+        self.__teleop_epa_max = teleop_epa_max
+        self.__endgame_epa_start = endgame_epa_start
+        self.__endgame_epa_pre_playoffs = endgame_epa_pre_playoffs
+        self.__endgame_epa_end = endgame_epa_end
+        self.__endgame_epa_mean = endgame_epa_mean
+        self.__endgame_epa_max = endgame_epa_max
+        self.__rp_1_epa_start = rp_1_epa_start
+        self.__rp_1_epa_end = rp_1_epa_end
+        self.__rp_1_epa_mean = rp_1_epa_mean
+        self.__rp_1_epa_max = rp_1_epa_max
+        self.__rp_2_epa_start = rp_2_epa_start
+        self.__rp_2_epa_end = rp_2_epa_end
+        self.__rp_2_epa_mean = rp_2_epa_mean
+        self.__rp_2_epa_max = rp_2_epa_max
+        self.__wins = wins
+        self.__losses = losses
+        self.__ties = ties
+        self.__count = count
+        self.__winrate = winrate
+        self.__rps = rps
+        self.__rps_per_match = rps_per_match
+        self.__rank = rank
+        self.__num_teams = num_teams
+
+    def team_key(self) -> str:
+        '''Returns the key of this team'''
+        return self.__team_key
+
+    def event_key(self) -> str:
+        '''Returns the key of this event'''
+        return self.__event_key
+
+    def epa_start(self) -> float:
+        return self.__epa_start
+
+    def epa_pre_playoffs(self) -> float:
+        return self.__epa_pre_playoffs
+
+    def epa_end(self) -> float:
+        return self.__epa_end
+
+    def epa_mean(self) -> float:
+        return self.__epa_mean
+
+    def epa_max(self) -> float:
+        return self.__epa_max
+
+    def epa_diff(self) -> float:
+        return self.__epa_diff
+
+    def auto_epa_start(self) -> float:
+        return self.__auto_epa_start
+
+    def auto_epa_pre_playoffs(self) -> float:
+        return self.__auto_epa_pre_playoffs
+
+    def auto_epa_end(self) -> float:
+        return self.__auto_epa_end
+
+    def auto_epa_mean(self) -> float:
+        return self.__auto_epa_mean
+
+    def auto_epa_max(self) -> float:
+        return self.__auto_epa_max
+
+    def teleop_epa_start(self) -> float:
+        return self.__teleop_epa_start
+
+    def teleop_epa_pre_playoffs(self) -> float:
+        return self.__teleop_epa_pre_playoffs
+
+    def teleop_epa_end(self) -> float:
+        return self.__teleop_epa_end
+
+    def teleop_epa_mean(self) -> float:
+        return self.__teleop_epa_mean
+
+    def teleop_epa_max(self) -> float:
+        return self.__teleop_epa_max
+
+    def endgame_epa_start(self) -> float:
+        return self.__endgame_epa_start
+
+    def endgame_epa_pre_playoffs(self) -> float:
+        return self.__endgame_epa_pre_playoffs
+
+    def endgame_epa_end(self) -> float:
+        return self.__endgame_epa_end
+
+    def endgame_epa_mean(self) -> float:
+        return self.__endgame_epa_mean
+
+    def endgame_epa_max(self) -> float:
+        return self.__endgame_epa_max
+
+    def rp_1_epa_start(self) -> float:
+        return self.__rp_1_epa_start
+
+    def rp_1_epa_end(self) -> float:
+        return self.__rp_1_epa_end
+
+    def rp_1_epa_mean(self) -> float:
+        return self.__rp_1_epa_mean
+
+    def rp_1_epa_max(self) -> float:
+        return self.__rp_1_epa_max
+
+    def rp_2_epa_start(self) -> float:
+        return self.__rp_2_epa_start
+
+    def rp_2_epa_end(self) -> float:
+        return self.__rp_2_epa_end
+
+    def rp_2_epa_mean(self) -> float:
+        return self.__rp_2_epa_mean
+
+    def rp_2_epa_max(self) -> float:
+        return self.__rp_2_epa_max
+
+    def wins(self) -> int:
+        return self.__wins
+
+    def losses(self) -> int:
+        return self.__losses
+
+    def ties(self) -> int:
+        return self.__ties
+
+    def count(self) -> int:
+        return self.__count
+
+    def winrate(self) -> float:
+        return self.__winrate
+
+    def rps(self) -> int:
+        return self.__rps
+
+    def rps_per_match(self) -> float:
+        return self.__rps_per_match
+
+    def rank(self) -> int:
+        return self.__rank
+
+    def num_teams(self) -> int:
+        return self.__num_teams
+
+
 class Webcast:
     '''
     Represents a webcast
     '''
+
     def __init__(self, webcast_type: str, channel: str, date: str, file: str):
         self.__type = webcast_type
         self.__channel = channel
@@ -366,13 +548,12 @@ class Event:
         '''Converts an event key to an event year'''
         return int(event_key[:4])
 
-
     def __init__(self, key: str, name: str, location: Location, event_type: int,
-            dates: tuple[str, str], district_key: str, short_name: str, week: int,
-            precise_location: PreciseLocation, location_name: str, timezone: str,
-            website: str, first_event_id: str, first_event_code: str,
-            webcasts: list[Webcast], divisions: list[str],
-            parent_event_key: str, playoff_type: int):
+                 dates: tuple[str, str], district_key: str, short_name: str, week: int,
+                 precise_location: PreciseLocation, location_name: str, timezone: str,
+                 website: str, first_event_id: str, first_event_code: str,
+                 webcasts: list[Webcast], divisions: list[str],
+                 parent_event_key: str, playoff_type: int):
         self.__key = key
         self.__name = name
         self.__location = location
@@ -569,6 +750,7 @@ class MatchAlliance:
     '''
     Represents an alliance in a match
     '''
+
     def __init__(self, teams: list[str], disqualified: list[str], surrogate: list[str]):
         self.__teams = teams
         self.__dq = disqualified
@@ -603,6 +785,7 @@ class MatchVideo:
     '''
     Represents a video of a match
     '''
+
     def __init__(self, video_type: str, key: str):
         self.__type = video_type
         self.__key = key
@@ -641,14 +824,13 @@ class Match:
         '''Converts a match key to an event key'''
         return match_key.split('_')[0]
 
-
     def __init__(self, key: str, level: str, set_number: int, match_number: int,
-            red_score: int, blue_score: int,
-            red_teams: MatchAlliance, blue_teams: MatchAlliance,
-            winner: str,
-            schedule_time: datetime, predicted_time: datetime,
-            actual_time: datetime, result_time: datetime,
-            videos = list[MatchVideo]):
+                 red_score: int, blue_score: int,
+                 red_teams: MatchAlliance, blue_teams: MatchAlliance,
+                 winner: str,
+                 schedule_time: datetime, predicted_time: datetime,
+                 actual_time: datetime, result_time: datetime,
+                 videos=list[MatchVideo]):
         self.__key = key
         self.__level = level
         self.__set_number = set_number
