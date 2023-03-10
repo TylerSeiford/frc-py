@@ -21,8 +21,7 @@ class FRCPy:
                     raise ValueError(
                         'Red alliance won but red score is less than blue score')
                 elif red_score == blue_score:
-                    raise ValueError(
-                        'Red alliance won but red score is equal to blue score')
+                    pass # Some games have tiebreakers
                 else:
                     pass
             case 'blue':
@@ -30,8 +29,7 @@ class FRCPy:
                     raise ValueError(
                         'Blue alliance won but blue score is less than red score')
                 elif blue_score == red_score:
-                    raise ValueError(
-                        'Blue alliance won but blue score is equal to red score')
+                    pass # Some games have tiebreakers
                 else:
                     pass
             case _:

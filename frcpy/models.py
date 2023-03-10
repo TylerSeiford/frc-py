@@ -855,6 +855,12 @@ class Match:
         '''Returns the level of this match'''
         return self.__level
 
+    def is_qualification(self) -> bool:
+        return self.__level == 'qm'
+
+    def is_playoff(self) -> bool:
+        return not self.is_qualification()
+
     def set_number(self) -> int:
         '''Returns the set number of this match'''
         return self.__set_number
