@@ -76,6 +76,12 @@ if __name__ == '__main__':
         print(f"Teams: {len(api.event_teams('2022mndu2'))}")
         print(f"Matches: {len(api.event_matches('2022mndu2'))}")
 
+        print('***** Event Alliances *****')
+        alliances = api._tba_client().event_alliances('2022mndu2')
+        for alliance in alliances:
+            for key, value in alliance.items():
+                print(f"\t- {key}: {value}")
+
         print('***** Team @ Event *****')
         print(f"Matches: {len(api.team_event_matches('frc2846', '2022mndu2'))}")
 
