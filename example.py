@@ -45,7 +45,7 @@ if __name__ == '__main__':
         min_year, max_year = api.year_range()
         for year in range(min_year, max_year + 1):
             print(f"{year}: {len(api.year_events(year))}")
-        event = api.event('2022mndu2')
+        event = api.event('2023iacf')
         print(f"Name: {event.name()}")
         print(f"Location: {event.location()}")
         print(f"Type: {event.event_type_str()}")
@@ -73,20 +73,19 @@ if __name__ == '__main__':
         print(f"Divisions: {event.divisions()}")
         print(f"Parent event: {event.parent_event_key()}")
         print(f"Playoff Type: {event.playoff_type_str()}")
-        print(f"Teams: {len(api.event_teams('2022mndu2'))}")
-        print(f"Matches: {len(api.event_matches('2022mndu2'))}")
+        print(f"Teams: {len(api.event_teams('2023iacf'))}")
+        print(f"Matches: {len(api.event_matches('2023iacf'))}")
 
         print('***** Event Alliances *****')
-        alliances = api._tba_client().event_alliances('2022mndu2')
+        alliances = api._tba_client().event_alliances('2023iacf')
         for alliance in alliances:
-            for key, value in alliance.items():
-                print(f"\t- {key}: {value}")
+            print(alliance['status'])
 
         print('***** Team @ Event *****')
-        print(f"Matches: {len(api.team_event_matches('frc2846', '2022mndu2'))}")
+        print(f"Matches: {len(api.team_event_matches('frc2846', '2023iacf'))}")
 
         print('***** Matches *****')
-        match = api.match('2022mndu_qm48')
+        match = api.match('2023iacf_sf12m1')
         print(f"Level: {match.level()}")
         print(f"Set Number: {match.set_number()}")
         print(f"Match Number: {match.match_number()}")
@@ -104,7 +103,7 @@ if __name__ == '__main__':
         print(f"Videos: {videos}")
 
         print('***** Team Event Stats *****')
-        stats = api.team_event_stats('frc2846', '2022mndu2')
+        stats = api.team_event_stats('frc2846', '2023iacf')
         print(f"EPA: {stats.epa_max()}")
         print(f"Auto EPA: {stats.auto_epa_max()}")
         print(f"Teleop EPA: {stats.teleop_epa_max()}")
@@ -113,7 +112,7 @@ if __name__ == '__main__':
         print(f"Rank: {stats.rank()} of {stats.num_teams()}")
 
         print('***** Team Year Stats *****')
-        stats = api.team_year_stats('frc2846', 2022)
+        stats = api.team_year_stats('frc2846', 2023)
         print(f"EPA: {stats.epa_max()}")
         print(f"Auto EPA: {stats.auto_epa_max()}")
         print(f"Teleop EPA: {stats.teleop_epa_max()}")

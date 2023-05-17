@@ -746,6 +746,17 @@ class Event:
         }
 
 
+class EventAlliance:
+    '''
+    Represents an alliance at an event
+    '''
+
+    def __init__(self, picks: list[str], declines: list[str], backup: list[str]):
+        self.__picks = picks
+        self.__declines = declines
+        self.__backup = backup
+    
+
 class MatchAlliance:
     '''
     Represents an alliance in a match
