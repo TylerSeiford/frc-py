@@ -32,12 +32,16 @@ if __name__ == '__main__':
         print(f"Website: {team.website()}")
         print(f"Rookie Year: {team.rookie_year()}")
         print(f"Motto: {team.motto()}")
-        print('- Precise location -')
-        location = api.team_precise_location(team)
-        print(f"Latitude/Longitude: {location.lat_lng()}")
-        print(f"Address: {location.address()}")
-        print(f"Place ID: {location.place_id()}")
-        print(f"Postal Code: {location.postal_code()}")
+        try:
+            location = api.team_precise_location(team)
+            if location is not None:
+                print('- Precise location -')
+                print(f"Latitude/Longitude: {location.lat_lng()}")
+                print(f"Address: {location.address()}")
+                print(f"Place ID: {location.place_id()}")
+                print(f"Postal Code: {location.postal_code()}")
+        except BaseException:
+            pass
         for year in api.team_years('frc2846'):
             print(f"{year}: {api.team_year_events('frc2846', year)}")
 
