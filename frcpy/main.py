@@ -150,6 +150,17 @@ class FRCPy:
             self.__cache.save_year_events(year, events)
         return events
 
+    def _event_precise_location(self, precise_location: PreciseLocation) -> PreciseLocation | None:
+        # TBA sometimes doesn't have a precise location for an event, if so, we must find it ourselves
+        if precise_location.place_id() is not None and precise_location.place_id() != '':
+            return precise_location
+        result = self._geocode(f"{precise_location.location().city()}, {precise_location.location().state_prov()}, {precise_location.location().country()}")
+        if result is None:
+            return precise_location # GMaps can't geocode the location, use TBA's attempt
+        lat, lng, address, postal_code, place_id = result
+        return PreciseLocation(precise_location.location(), lat, lng,
+                                address, postal_code, place_id)
+
     def event(self, key: str, cached: bool = True, cache_expiry: int = 90) -> Event:
         '''Get an event'''
         if cached:
@@ -173,8 +184,7 @@ class FRCPy:
             webcasts.append(
                 Webcast(webcast['type'], webcast['channel'], date, file))
         location = Location(event.city, event.state_prov, event.country)
-        precise_location = PreciseLocation(location, event.lat, event.lng,
-                                           event.address, event.postal_code, event.gmaps_place_id)
+        precise_location = self._event_precise_location(PreciseLocation(location, event.lat, event.lng, event.address, event.postal_code, event.gmaps_place_id))
         start_date = datetime.strptime(event.start_date, '%Y-%m-%d')
         end_date = datetime.strptime(event.end_date, '%Y-%m-%d')
         event = Event(
@@ -463,7 +473,7 @@ class FRCPy:
         if cached:
             data = self.__cache.get_team_precise_location(
                 team.key(), cache_expiry)
-            if data is not None and data.postal_code() is not None:
+            if data is not None and data.place_id() is not None:
                 return data
 
         data = self.__team_school(team)
@@ -471,7 +481,7 @@ class FRCPy:
             data = self.__team_high_school(team)
         if data is None:
             data = self.__team_city(team)
-        if cached:
+        if data is not None and cached:
             self.__cache.save_team_precise_location(team.key(), data)
         return data
 
